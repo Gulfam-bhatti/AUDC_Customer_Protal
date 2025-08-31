@@ -40,7 +40,6 @@ export interface PaymentMethod {
 
 
 export interface TenantFormData {
-  id: string;
   Name: string;
   abn: string;
   domain_url: string;
