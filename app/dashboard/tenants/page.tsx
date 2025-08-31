@@ -6,7 +6,7 @@ import { TenantFormData } from "@/types/customer-portal";
 
 interface Props {
   params: { tenantId?: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default function TenantFormPage({ params, searchParams }: Props) {
