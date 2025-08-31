@@ -158,9 +158,10 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
             ABN
           </label>
           <Input
-            isRequired
-            isInvalid={!!errors.abn}
             errorMessage={errors.abn}
+            id="abn-input"
+            isInvalid={!!errors.abn}
+            isRequired
             placeholder="Enter the ABN"
             radius="lg"
             size="lg"
@@ -172,14 +173,18 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-            <Icon icon="heroicons:link" className="h-4 w-4" />
+          <label 
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+            htmlFor="domain-url-input"
+          >
+            <Icon className="h-4 w-4" icon="heroicons:link" />
             Domain URL
           </label>
           <Input
-            isRequired
-            isInvalid={!!errors.domain_url}
             errorMessage={errors.domain_url}
+            id="domain-url-input"
+            isInvalid={!!errors.domain_url}
+            isRequired
             placeholder="Enter the domain URL"
             radius="lg"
             size="lg"
@@ -191,14 +196,18 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-            <Icon icon="heroicons:envelope" className="h-4 w-4" />
+          <label 
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+            htmlFor="email-input"
+          >
+            <Icon className="h-4 w-4" icon="heroicons:envelope" />
             Email Address
           </label>
           <Input
-            isRequired
-            isInvalid={!!errors.entity_email}
             errorMessage={errors.entity_email}
+            id="email-input"
+            isInvalid={!!errors.entity_email}
+            isRequired
             placeholder="contact@yourorganization.com"
             radius="lg"
             size="lg"
@@ -210,14 +219,18 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-            <Icon icon="heroicons:globe-alt" className="h-4 w-4" />
+          <label 
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+            htmlFor="website-input"
+          >
+            <Icon className="h-4 w-4" icon="heroicons:globe-alt" />
             Website URL
           </label>
           <Input
-            isRequired
-            isInvalid={!!errors.entity_website_url}
             errorMessage={errors.entity_website_url}
+            id="website-input"
+            isInvalid={!!errors.entity_website_url}
+            isRequired
             placeholder="www.yourorganization.com"
             radius="lg"
             size="lg"
@@ -229,14 +242,18 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-            <Icon icon="heroicons:target" className="h-4 w-4" />
+          <label 
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+            htmlFor="purpose-input"
+          >
+            <Icon className="h-4 w-4" icon="heroicons:target" />
             Purpose
           </label>
           <Input
-            isRequired
-            isInvalid={!!errors.entity_purpose}
             errorMessage={errors.entity_purpose}
+            id="purpose-input"
+            isInvalid={!!errors.entity_purpose}
+            isRequired
             placeholder="What is your organization's main purpose?"
             radius="lg"
             size="lg"
@@ -248,14 +265,18 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-            <Icon icon="heroicons:rocket-launch" className="h-4 w-4" />
+          <label 
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+            htmlFor="mission-input"
+          >
+            <Icon className="h-4 w-4" icon="heroicons:rocket-launch" />
             Mission
           </label>
           <Input
-            isRequired
-            isInvalid={!!errors.entity_mission}
             errorMessage={errors.entity_mission}
+            id="mission-input"
+            isInvalid={!!errors.entity_mission}
+            isRequired
             placeholder="Describe your organization's mission"
             radius="lg"
             size="lg"
@@ -278,14 +299,18 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </p>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-              <Icon icon="heroicons:cube" className="h-4 w-4" />
+            <label 
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+              htmlFor="child-entities-input"
+            >
+              <Icon className="h-4 w-4" icon="heroicons:cube" />
               Child Entities
             </label>
             <Input
-              isRequired
-              isInvalid={!!errors.child_entities_term}
               errorMessage={errors.child_entities_term}
+              id="child-entities-input"
+              isInvalid={!!errors.child_entities_term}
+              isRequired
               placeholder="e.g., Communities"
               radius="lg"
               size="lg"
@@ -297,11 +322,15 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-              <Icon icon="heroicons:users" className="h-4 w-4" />
+            <label 
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+              htmlFor="employees-input"
+            >
+              <Icon className="h-4 w-4" icon="heroicons:users" />
               Employees
             </label>
             <Input
+              id="employees-input"
               isRequired
               isInvalid={!!errors.employees_term}
               errorMessage={errors.employees_term}
