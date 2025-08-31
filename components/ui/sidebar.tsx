@@ -139,12 +139,14 @@ export const MobileSidebar = ({
                 className
               )}
             >
-              <div
+              <button
+                type="button"
                 className="absolute right-10 top-10 z-50 text-neutral-800 dark:text-neutral-200"
                 onClick={() => setOpen(!open)}
+                aria-label="Close sidebar"
               >
                 <IconX />
-              </div>
+              </button>
               {children}
             </motion.div>
           )}

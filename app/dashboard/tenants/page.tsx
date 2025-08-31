@@ -2,9 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { Input, Textarea, Chip } from "@heroui/react";
 import { Icon } from "@iconify/react";
-import { TenantFormData, TenantFormPageProps } from "@/types/customer-portal";
+import { TenantFormData } from "@/types/customer-portal";
 
-export default function TenantFormPage({ tenantId }: TenantFormPageProps) {
+interface Props {
+  params: { tenantId?: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+export default async function TenantFormPage({ params, searchParams }: Props) {
+  const { tenantId } = params;
   const [data, setData] = useState<Partial<TenantFormData>>({});
   const [errors, setErrors] = useState<
     Partial<Record<keyof TenantFormData, string>>
@@ -26,7 +32,7 @@ export default function TenantFormPage({ tenantId }: TenantFormPageProps) {
   const fetchTenantData = async () => {
     setIsLoading(true);
     const mockTenantData: TenantFormData = {
-      id: tenantId,
+      id: tenantId || "",
       Name: "Acme Corp",
       abn: "12345678901",
       domain_url: "acme.com",
