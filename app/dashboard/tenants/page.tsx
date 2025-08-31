@@ -4,15 +4,13 @@ import { Input, Textarea, Chip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { TenantFormData } from "@/types/customer-portal";
 
-type TenantPageProps = {
-  params: { tenantId?: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
 export default function TenantFormPage({
   params,
   searchParams = {},
-}: TenantPageProps) {
+}: {
+  params: { tenantId?: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const { tenantId } = params;
   const [data, setData] = useState<Partial<TenantFormData>>({});
   const [errors, setErrors] = useState<
@@ -304,13 +302,17 @@ export default function TenantFormPage({
       <hr className="my-4 border-t border-default-200" />
       <div className="flex flex-col gap-6">
         <h3 className="text-xl font-bold text-default-800 flex items-center gap-2">
-          <Icon icon="heroicons:tag" className="h-6 w-6 text-default-600" />
+          <Icon
+            icon="heroicons:puzzle-piece"
+            className="h-6 w-6 text-default-600"
+          />
           Custom Terminology
         </h3>
         <p className="text-default-500 text-sm">
           Customize how different roles and groups are referred to in your
           organization.
         </p>
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label
