@@ -9,7 +9,7 @@ interface Props {
   searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default async function TenantFormPage({ params, searchParams }: Props) {
+export default function TenantFormPage({ params, searchParams }: Props) {
   const { tenantId } = params;
   const [data, setData] = useState<Partial<TenantFormData>>({});
   const [errors, setErrors] = useState<
@@ -115,11 +115,12 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
       <hr className="my-4 border-t border-default-200" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label htmlFor="entity_full_name" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:identification" className="h-4 w-4" />
             Full Name
           </label>
           <Input
+            id="entity_full_name"
             isRequired
             errorMessage={errors.entity_full_name}
             isInvalid={!!errors.entity_full_name}
@@ -134,11 +135,12 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label htmlFor="entity_short_name" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:hashtag" className="h-4 w-4" />
             Short Name
           </label>
           <Input
+            id="entity_short_name"
             isRequired
             errorMessage={errors.entity_short_name}
             isInvalid={!!errors.entity_short_name}
@@ -153,14 +155,14 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label htmlFor="abn-input" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:key" className="h-4 w-4" />
             ABN
           </label>
           <Input
+            id="abn-input"
             isRequired
             errorMessage={errors.abn}
-            id="abn-input"
             isInvalid={!!errors.abn}
             placeholder="Enter the ABN"
             radius="lg"
@@ -322,11 +324,12 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+            <label htmlFor="employees-term" className="text-sm font-medium text-default-700 flex items-center gap-2">
               <Icon icon="heroicons:users" className="h-4 w-4" />
               Employees
             </label>
             <Input
+              id="employees-term"
               isRequired
               errorMessage={errors.employees_term}
               isInvalid={!!errors.employees_term}
