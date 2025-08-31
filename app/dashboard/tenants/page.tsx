@@ -3,14 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Input, Textarea, Chip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { TenantFormData } from "@/types/customer-portal";
+import { TenantProps } from "@/lib/types";
 
-export default function TenantFormPage({
-  params,
-  searchParams = {},
-}: {
-  params: { tenantId?: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}) {
+export default function TenantFormPage({ params, searchParams }: TenantProps) {
   const { tenantId } = params;
   const [data, setData] = useState<Partial<TenantFormData>>({});
   const [errors, setErrors] = useState<
@@ -116,10 +111,7 @@ export default function TenantFormPage({
       <hr className="my-4 border-t border-default-200" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label
-            htmlFor="entity_full_name"
-            className="text-sm font-medium text-default-700 flex items-center gap-2"
-          >
+          <label htmlFor="entity_full_name" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:identification" className="h-4 w-4" />
             Full Name
           </label>
@@ -139,10 +131,7 @@ export default function TenantFormPage({
         </div>
 
         <div className="space-y-2">
-          <label
-            htmlFor="entity_short_name"
-            className="text-sm font-medium text-default-700 flex items-center gap-2"
-          >
+          <label htmlFor="entity_short_name" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:hashtag" className="h-4 w-4" />
             Short Name
           </label>
@@ -162,10 +151,7 @@ export default function TenantFormPage({
         </div>
 
         <div className="space-y-2">
-          <label
-            htmlFor="abn-input"
-            className="text-sm font-medium text-default-700 flex items-center gap-2"
-          >
+          <label htmlFor="abn-input" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:key" className="h-4 w-4" />
             ABN
           </label>
@@ -302,17 +288,13 @@ export default function TenantFormPage({
       <hr className="my-4 border-t border-default-200" />
       <div className="flex flex-col gap-6">
         <h3 className="text-xl font-bold text-default-800 flex items-center gap-2">
-          <Icon
-            icon="heroicons:puzzle-piece"
-            className="h-6 w-6 text-default-600"
-          />
+          <Icon icon="heroicons:tag" className="h-6 w-6 text-default-600" />
           Custom Terminology
         </h3>
         <p className="text-default-500 text-sm">
           Customize how different roles and groups are referred to in your
           organization.
         </p>
-
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label
@@ -338,10 +320,7 @@ export default function TenantFormPage({
           </div>
 
           <div className="space-y-2">
-            <label
-              htmlFor="employees-term"
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-            >
+            <label htmlFor="employees-term" className="text-sm font-medium text-default-700 flex items-center gap-2">
               <Icon icon="heroicons:users" className="h-4 w-4" />
               Employees
             </label>
