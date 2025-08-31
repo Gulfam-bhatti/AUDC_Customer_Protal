@@ -4,12 +4,14 @@ import { Input, Textarea, Chip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { TenantFormData } from "@/types/customer-portal";
 
-interface TenantPageProps {
+type TenantPageProps = {
   params: { tenantId?: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 export default function TenantFormPage({
   params,
+  searchParams = {},
 }: TenantPageProps) {
   const { tenantId } = params;
   const [data, setData] = useState<Partial<TenantFormData>>({});
