@@ -45,7 +45,7 @@ export function PersonalDetails({
           </h2>
         </div>
         <p className="text-default-500 text-lg max-w-md mx-auto">
-          Let's start by gathering your essential business details
+          Let&apos;s start by gathering your essential business details
         </p>
       </div>
 
@@ -53,11 +53,12 @@ export function PersonalDetails({
       <div className="space-y-6 grid grid-cols-2 gap-6">
         {/* Business Name Input */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label htmlFor="business_name" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:building-storefront" className="h-4 w-4" />
             Business Name
           </label>
           <Input
+            id="business_name"
             isRequired
             isInvalid={!!errors.Name}
             errorMessage={errors.Name}
@@ -89,11 +90,12 @@ export function PersonalDetails({
 
         {/* Server Selection */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label htmlFor="server" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:server" className="h-4 w-4" />
             Server Location
           </label>
           <Select
+            id="server"
             selectedKeys={data.server ? [data.server] : []}
             onSelectionChange={(keys) => {
               const selectedValue = Array.from(keys)[0] as string;
@@ -179,7 +181,7 @@ export function PersonalDetails({
 
         {/* Access Code Input */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label htmlFor="access_code" className="text-sm font-medium text-default-700 flex items-center gap-2">
             <Icon icon="heroicons:key" className="h-4 w-4" />
             Access Code
             <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
@@ -187,6 +189,7 @@ export function PersonalDetails({
             </span>
           </label>
           <Input
+            id="access_code"
             isRequired
             isInvalid={
               !!errors.access_code || !!validateAccessCode(data.access_code)

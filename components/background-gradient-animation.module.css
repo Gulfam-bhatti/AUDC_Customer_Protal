@@ -1,0 +1,65 @@
+@keyframes gradient-x {
+  0%, 100% {
+    transform: translateX(0%) rotate(0deg);
+  }
+  50% {
+    transform: translateX(100%) rotate(360deg);
+  }
+}
+
+@keyframes gradient-y {
+  0%, 100% {
+    transform: translateY(0%) rotate(0deg);
+  }
+  50% {
+    transform: translateY(100%) rotate(180deg);
+  }
+}
+
+@keyframes gradient-xy {
+  0%, 100% {
+    transform: translate(0%, 0%) rotate(0deg);
+  }
+  50% {
+    transform: translate(50%, 50%) rotate(90deg);
+  }
+}
+
+.animateGradientX {
+  animation: gradient-x 15s ease infinite;
+}
+
+.animateGradientY {
+  animation: gradient-y 15s ease infinite;
+}
+
+.animateGradientXY {
+  animation: gradient-xy 25s ease infinite;
+}
+
+.animateBlob {
+  animation: blob 7s infinite;
+}
+
+.animationDelay2000 {
+  animation-delay: 2s;
+}
+
+.animationDelay4000 {
+  animation-delay: 4s;
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1) rotate(120deg);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9) rotate(240deg);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1) rotate(360deg);
+  }
+}

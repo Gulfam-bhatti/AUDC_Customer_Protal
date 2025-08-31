@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Star, Zap, Crown, Rocket } from "lucide-react";
 import { useState } from "react";
 import { BorderBeam } from "@/components/magicui/border-beam";
+import Link from "next/link";
 
 const plans = [
   {
@@ -318,33 +319,33 @@ export default function SubscriptionPage() {
       <footer className="bg-card border-t border-border py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-muted-foreground mb-4">
-            Questions about our plans? We're here to help.
+            Questions about our plans? We&apos;re here to help.
           </p>
           <div className="flex flex-wrap justify-center gap-6 text-sm">
-            <a
-              href="#"
+            <Link
+              href="/"
               className="text-primary hover:text-primary/80 transition-colors"
             >
               Contact Support
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/privacy-policy"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Privacy Policy
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/terms-of-service"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Terms of Service
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/faq"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               FAQ
-            </a>
+            </Link>
           </div>
         </div>
       </footer>

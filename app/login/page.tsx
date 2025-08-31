@@ -200,8 +200,8 @@ export default function AuthForm() {
 
               <button
                 className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] disabled:cursor-not-allowed dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
-                type="submit"
                 disabled={isLoading}
+                type="submit"
               >
                 {isLoading
                   ? isLogin
@@ -219,23 +219,25 @@ export default function AuthForm() {
               <button className="text-sm text-neutral-600 dark:text-neutral-300">
                 {isLogin ? (
                   <p>
-                    Don't have an account?{" "}
-                    <strong
-                      className="text-blue-500 hover:underline cursor-pointer"
+                    Don&apos;t have an account?
+                    <button
+                      className="text-blue-500 hover:underline font-bold p-0 bg-transparent border-none"
                       onClick={() => setIsLogin(!isLogin)}
+                      type="button"
                     >
                       Sign up
-                    </strong>
+                    </button>
                   </p>
                 ) : (
                   <p>
-                    Already have an account?{" "}
-                    <strong
-                      className="text-blue-500 hover:underline cursor-pointer"
+                    Already have an account?
+                    <button
+                      className="text-blue-500 hover:underline font-bold p-0 bg-transparent border-none"
                       onClick={() => setIsLogin(!isLogin)}
+                      type="button"
                     >
                       Log in
-                    </strong>
+                    </button>
                   </p>
                 )}
               </button>

@@ -95,11 +95,15 @@ export function ContactInformation({
 
       {/* Organization Type Selector */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+        <label
+          htmlFor="organization_type"
+          className="text-sm font-medium text-default-700 flex items-center gap-2"
+        >
           <Icon icon="heroicons:building-office-2" className="h-4 w-4" />
           Organization Type
         </label>
         <Select
+          id="organization_type"
           isRequired
           isInvalid={!!errors.organization_type}
           errorMessage={errors.organization_type}
@@ -142,11 +146,15 @@ export function ContactInformation({
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Full Name */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="entity_full_name"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:identification" className="h-4 w-4" />
             Full Name
           </label>
           <Input
+            id="entity_full_name"
             isRequired
             isInvalid={!!errors.entity_full_name}
             errorMessage={errors.entity_full_name}
@@ -182,11 +190,15 @@ export function ContactInformation({
 
         {/* Short Name */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="entity_short_name"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:hashtag" className="h-4 w-4" />
             Short Name
           </label>
           <Input
+            id="entity_short_name"
             isRequired
             isInvalid={!!errors.entity_short_name}
             errorMessage={errors.entity_short_name}
@@ -222,11 +234,15 @@ export function ContactInformation({
 
         {/* Email */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="entity_email"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:envelope" className="h-4 w-4" />
             Email Address
           </label>
           <Input
+            id="entity_email"
             isRequired
             isInvalid={
               !!errors.entity_email ||
@@ -283,11 +299,15 @@ export function ContactInformation({
 
         {/* Website URL */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="entity_website_url"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:globe-alt" className="h-4 w-4" />
             Website URL
           </label>
           <Input
+            id="entity_website_url"
             isRequired
             isInvalid={
               !!errors.entity_website_url ||
@@ -344,11 +364,15 @@ export function ContactInformation({
 
         {/* Purpose */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="entity_purpose"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:target" className="h-4 w-4" />
             Purpose
           </label>
           <Input
+            id="entity_purpose"
             isRequired
             isInvalid={!!errors.entity_purpose}
             errorMessage={errors.entity_purpose}
@@ -384,11 +408,15 @@ export function ContactInformation({
 
         {/* Mission */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="entity_mission"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:rocket-launch" className="h-4 w-4" />
             Mission
           </label>
           <Input
+            id="entity_mission"
             isRequired
             isInvalid={!!errors.entity_mission}
             errorMessage={errors.entity_mission}
@@ -437,11 +465,15 @@ export function ContactInformation({
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Child Entities */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+            <label
+              htmlFor="child_entities_term"
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+            >
               <Icon icon="heroicons:cube" className="h-4 w-4" />
               Child Entities
             </label>
             <Input
+              id="child_entities_term"
               isRequired
               isInvalid={!!errors.child_entities_term}
               errorMessage={errors.child_entities_term}
@@ -477,11 +509,15 @@ export function ContactInformation({
 
           {/* Employees */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+            <label
+              htmlFor="employees_term"
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+            >
               <Icon icon="heroicons:users" className="h-4 w-4" />
               Employees
             </label>
             <Input
+              id="employees_term"
               isRequired
               isInvalid={!!errors.employees_term}
               errorMessage={errors.employees_term}
@@ -517,11 +553,15 @@ export function ContactInformation({
 
           {/* Members */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+            <label
+              htmlFor="members_term"
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+            >
               <Icon icon="heroicons:user-group" className="h-4 w-4" />
               Members
             </label>
             <Input
+              id="members_term"
               isRequired
               isInvalid={!!errors.members_term}
               errorMessage={errors.members_term}
@@ -557,11 +597,15 @@ export function ContactInformation({
 
           {/* Groups */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+            <label
+              htmlFor="groups_term"
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+            >
               <Icon icon="heroicons:folder" className="h-4 w-4" />
               Groups
             </label>
             <Input
+              id="groups_term"
               isRequired
               isInvalid={!!errors.groups_term}
               errorMessage={errors.groups_term}
@@ -611,10 +655,17 @@ export function ContactInformation({
         </p>
 
         <div className="space-y-4">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label 
+            htmlFor="features-select"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             Select Features to Enable
           </label>
-          <div className="flex flex-wrap gap-3">
+          <div 
+            id="features-select"
+            role="group"
+            aria-label="Available features"
+            className="flex flex-wrap gap-3">
             {availableFeatures.map((feature) => (
               <Chip
                 key={feature}
@@ -653,11 +704,15 @@ export function ContactInformation({
 
       {/* Description Textarea */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+        <label
+          htmlFor="entity_description"
+          className="text-sm font-medium text-default-700 flex items-center gap-2"
+        >
           <Icon icon="heroicons:document-text" className="h-4 w-4" />
           Organization Description
         </label>
         <Textarea
+          id="entity_description"
           isRequired
           isInvalid={!!errors.entity_description}
           errorMessage={errors.entity_description}

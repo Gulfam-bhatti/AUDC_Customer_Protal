@@ -316,14 +316,18 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-              <Icon icon="heroicons:user-group" className="h-4 w-4" />
+            <label 
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+              htmlFor="members-term"
+            >
+              <Icon className="h-4 w-4" icon="heroicons:user-group" />
               Members
             </label>
             <Input
-              isRequired
-              isInvalid={!!errors.members_term}
               errorMessage={errors.members_term}
+              id="members-term"
+              isInvalid={!!errors.members_term}
+              isRequired
               placeholder="e.g., Members"
               radius="lg"
               size="lg"
@@ -335,14 +339,18 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-              <Icon icon="heroicons:folder" className="h-4 w-4" />
+            <label 
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+              htmlFor="groups-term"
+            >
+              <Icon className="h-4 w-4" icon="heroicons:folder" />
               Groups
             </label>
             <Input
-              isRequired
-              isInvalid={!!errors.groups_term}
               errorMessage={errors.groups_term}
+              id="groups-term"
+              isInvalid={!!errors.groups_term}
+              isRequired
               placeholder="e.g., Families"
               radius="lg"
               size="lg"
@@ -368,26 +376,29 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
         </p>
 
         <div className="space-y-4">
-          <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label 
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+            htmlFor="features-select"
+          >
             Select Features to Enable
           </label>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3" id="features-select">
             {availableFeatures.map((feature) => (
               <Chip
-                key={feature}
-                variant="flat"
+                className="cursor-pointer transition-all duration-200 ease-in-out hover:scale-105"
                 color={
                   data.enabled_features?.includes(feature)
                     ? "success"
                     : "default"
                 }
-                onClick={() => handleFeatureToggle(feature)}
-                className="cursor-pointer transition-all duration-200 ease-in-out hover:scale-105"
+                key={feature}
                 startContent={
                   data.enabled_features?.includes(feature) && (
-                    <Icon icon="heroicons:check" className="h-4 w-4" />
+                    <Icon className="h-4 w-4" icon="heroicons:check" />
                   )
                 }
+                variant="flat"
+                onClick={() => handleFeatureToggle(feature)}
               >
                 {feature}
               </Chip>
@@ -397,11 +408,15 @@ export default async function TenantFormPage({ params, searchParams }: Props) {
       </div>
       <hr className="my-4 border-t border-default-200" />
       <div className="space-y-2">
-        <label className="text-sm font-medium text-default-700 flex items-center gap-2">
-          <Icon icon="heroicons:document-text" className="h-4 w-4" />
+        <label 
+          className="text-sm font-medium text-default-700 flex items-center gap-2"
+          htmlFor="org-description"
+        >
+          <Icon className="h-4 w-4" icon="heroicons:document-text" />
           Organization Description
         </label>
         <Textarea
+          id="org-description"
           isRequired
           isInvalid={!!errors.entity_description}
           errorMessage={errors.entity_description}
