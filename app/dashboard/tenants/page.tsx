@@ -4,15 +4,13 @@ import { Input, Textarea, Chip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { TenantFormData } from "@/types/customer-portal";
 
-interface TenantPageProps {
-  params: { tenantId?: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
 export default function TenantFormPage({
   params,
   searchParams,
-}: TenantPageProps) {
+}: {
+  params: { tenantId?: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const { tenantId } = params;
   const [data, setData] = useState<Partial<TenantFormData>>({});
   const [errors, setErrors] = useState<
@@ -56,6 +54,7 @@ export default function TenantFormPage({
       entity_description:
         "Acme Corp is a leading organization in the technology sector, dedicated to innovation and excellence.",
     };
+
     setTimeout(() => {
       setData(mockTenantData);
       setIsLoading(false);
