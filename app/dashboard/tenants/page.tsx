@@ -4,12 +4,15 @@ import { Input, Textarea, Chip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { TenantFormData } from "@/types/customer-portal";
 
-interface Props {
+interface TenantPageProps {
   params: { tenantId?: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default function TenantFormPage({ params, searchParams }: Props) {
+export default function TenantFormPage({
+  params,
+  searchParams,
+}: TenantPageProps) {
   const { tenantId } = params;
   const [data, setData] = useState<Partial<TenantFormData>>({});
   const [errors, setErrors] = useState<
@@ -115,7 +118,10 @@ export default function TenantFormPage({ params, searchParams }: Props) {
       <hr className="my-4 border-t border-default-200" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label htmlFor="entity_full_name" className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="entity_full_name"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:identification" className="h-4 w-4" />
             Full Name
           </label>
@@ -135,7 +141,10 @@ export default function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="entity_short_name" className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="entity_short_name"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:hashtag" className="h-4 w-4" />
             Short Name
           </label>
@@ -155,7 +164,10 @@ export default function TenantFormPage({ params, searchParams }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="abn-input" className="text-sm font-medium text-default-700 flex items-center gap-2">
+          <label
+            htmlFor="abn-input"
+            className="text-sm font-medium text-default-700 flex items-center gap-2"
+          >
             <Icon icon="heroicons:key" className="h-4 w-4" />
             ABN
           </label>
@@ -324,7 +336,10 @@ export default function TenantFormPage({ params, searchParams }: Props) {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="employees-term" className="text-sm font-medium text-default-700 flex items-center gap-2">
+            <label
+              htmlFor="employees-term"
+              className="text-sm font-medium text-default-700 flex items-center gap-2"
+            >
               <Icon icon="heroicons:users" className="h-4 w-4" />
               Employees
             </label>
