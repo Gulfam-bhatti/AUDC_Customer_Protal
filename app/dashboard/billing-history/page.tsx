@@ -4,7 +4,6 @@ import { CoolMode } from "@/components/magicui/cool-mode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import confetti from "canvas-confetti";
 import { Badge, Calendar, DollarSign, Download, Eye, FileText } from "lucide-react";
 
 export default function BillingHistoryPage() {
