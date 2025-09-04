@@ -109,7 +109,13 @@ function CustomNavbar() {
               Get Enrolment
             </Button>
           ) : (
-            <Button className="mt-4" color="primary" onClick={() => router.push("/login")}>
+            <Button
+              className="mt-4"
+              color="primary"
+              onClick={() =>
+                (window.location.href = "https://localhost:3000/login")
+              }
+            >
               Login
             </Button>
           )}
@@ -119,9 +125,9 @@ function CustomNavbar() {
             <Button
               color="primary"
               className="w-full mt-4"
-              onClick={handleLogOut}
+              onClick={() => router.push("/dashboard/tenants")}
             >
-              Log out
+              Console
             </Button>
           )}
         </NavbarItem>

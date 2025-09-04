@@ -113,7 +113,7 @@ function App() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
+    <div className="flex min-h-screen flex-col max-w-7xl mx-auto items-center justify-center bg-white p-4">
       <div className="w-full max-w-full space-y-8">
         <div className="space-y-2 text-center">
           <h1 className="flex items-center mr-24 justify-center gap-2 text-4xl font-bold">

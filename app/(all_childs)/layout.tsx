@@ -31,11 +31,10 @@ export default function RootLayout({
   return (
     <div className="relative flex flex-col h-screen">
       <CustomNavbar />
-      <main className="max-w-7xl w-full mx-auto">
+      <main className="">
         {children}
         <Toaster />
       </main>
-      <Footer />
     </div>
   );
 }

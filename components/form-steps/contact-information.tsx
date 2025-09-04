@@ -3,12 +3,12 @@ import { FormData } from "@/types/form-types";
 import { Input, Textarea, Select, SelectItem } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import React from "react";
-import { Chip } from "@heroui/react"; // Assuming Chip component from @heroui/react or similar
+import { Chip } from "@heroui/react";
 
 interface ContactInformationProps {
   data: FormData;
   errors: Partial<Record<keyof FormData, string>>;
-  onChange: (key: keyof FormData, value: string | string[]) => void; // Update onChange type to accept string[] for features
+  onChange: (key: keyof FormData, value: string | string[]) => void;
 }
 
 export function ContactInformation({
