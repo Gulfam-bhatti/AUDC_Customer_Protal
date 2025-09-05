@@ -44,6 +44,7 @@ export interface TenantFormData {
   abn: string;
   domain_url: string;
   server: string;
+  time_zone: string;
   access_code: string;
   organization_type?: string;
   enabled_features?: string[];

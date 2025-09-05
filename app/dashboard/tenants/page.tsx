@@ -17,19 +17,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 import {
   Badge,
   Calendar,
   DollarSign,
   Download,
   Eye,
-  FileText,
   Users,
-  Building,
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 // Define Tenant type based on the Supabase schema
 type Tenant = {
@@ -49,8 +50,10 @@ type Tenant = {
 };
 
 export default function BillingHistoryPage() {
+  const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchTenants = async () => {
@@ -90,6 +93,27 @@ export default function BillingHistoryPage() {
     }
   };
 
+  useEffect(() => {
+    handleLoginUserOnMounted();
+  }, []);
+
+  const handleLoginUserOnMounted = async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error) {
+      toast.error("error fetching user:" + error.message);
+    } else {
+      setUser(user);
+    }
+    if (!user) {
+      window.location.href = "http://localhost:3000";
+    }
+    console.log("user id:" + user?.id);
+  };
+
   // Calculate statistics
   const totalTenants = tenants.length;
   const activeTenants = tenants.filter((t) => t.is_active).length;
@@ -105,133 +129,144 @@ export default function BillingHistoryPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      {user && (
         <div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-            Tenant Management
-          </h1>
-          <p className="text-slate-600 mt-2">
-            View and manage all tenant accounts
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                Tenant Management
+              </h1>
+              <p className="text-slate-600 mt-2">
+                View and manage all tenant accounts
+              </p>
+            </div>
+            <CoolMode>
+              <Button onClick={() => router.push('/dashboard/tenants/add_new_tenant')} className="bg-gradient-to-r cursor-pointer from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Download className="w-4 h-4 mr-2" />
+                Export All
+              </Button>
+            </CoolMode>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {totalTenants}
+                    </p>
+                    <p className="text-sm text-slate-600">Total Tenants</p>
+                  </div>
+                  <div className="p-3 bg-blue-100 rounded-full">
+                    <Users className="w-6 h-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-teal-50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      {activeTenants}
+                    </p>
+                    <p className="text-sm text-slate-600">Active Tenants</p>
+                  </div>
+                  <div className="p-3 bg-emerald-100 rounded-full">
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {inactiveTenants}
+                    </p>
+                    <p className="text-sm text-slate-600">Inactive Tenants</p>
+                  </div>
+                  <div className="p-3 bg-purple-100 rounded-full">
+                    <XCircle className="w-6 h-6 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-xl">All Tenants</CardTitle>
+              <CardDescription>
+                Complete list of tenant accounts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Created Date</TableHead>
+                    <TableHead>Tenant Name</TableHead>
+                    <TableHead>Access Code</TableHead>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tenants.map((tenant) => (
+                    <TableRow key={tenant.id}>
+                      <TableCell className="font-medium">
+                        {new Date(tenant.created_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        {tenant.name}
+                      </TableCell>
+                      <TableCell>{tenant.access_code}</TableCell>
+                      <TableCell>{tenant.domain || "N/A"}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(tenant.status)}>
+                          {tenant.status.charAt(0).toUpperCase() +
+                            tenant.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="hover:bg-blue-50"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="hover:bg-emerald-50"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
-        <CoolMode>
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            <Download className="w-4 h-4 mr-2" />
-            Export All
-          </Button>
-        </CoolMode>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-blue-600">
-                  {totalTenants}
-                </p>
-                <p className="text-sm text-slate-600">Total Tenants</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-teal-50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {activeTenants}
-                </p>
-                <p className="text-sm text-slate-600">Active Tenants</p>
-              </div>
-              <div className="p-3 bg-emerald-100 rounded-full">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-purple-600">
-                  {inactiveTenants}
-                </p>
-                <p className="text-sm text-slate-600">Inactive Tenants</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <XCircle className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-xl">All Tenants</CardTitle>
-          <CardDescription>Complete list of tenant accounts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Created Date</TableHead>
-                <TableHead>Tenant Name</TableHead>
-                <TableHead>Access Code</TableHead>
-                <TableHead>Domain</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tenants.map((tenant) => (
-                <TableRow key={tenant.id}>
-                  <TableCell className="font-medium">
-                    {new Date(tenant.created_at).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </TableCell>
-                  <TableCell className="font-semibold">{tenant.name}</TableCell>
-                  <TableCell>{tenant.access_code}</TableCell>
-                  <TableCell>{tenant.domain || "N/A"}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(tenant.status)}>
-                      {tenant.status.charAt(0).toUpperCase() +
-                        tenant.status.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="hover:bg-blue-50"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="hover:bg-emerald-50"
-                      >
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      )}
     </div>
   );
 }

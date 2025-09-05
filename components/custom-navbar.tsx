@@ -60,7 +60,7 @@ function CustomNavbar() {
     } else {
       toast.success("Logged out successfully");
       setFindUser(null); // UI update
-      router.push("/login"); // optional redirect
+      window.location.href = "http://localhost:3000";
     }
   };
 

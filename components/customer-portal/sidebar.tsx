@@ -10,9 +10,12 @@ import {
   CreditCard,
   User2,
   LogOut,
+  Users,
+  Receipt,
+  List,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { redirect, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import { Button } from "../ui/button";
@@ -25,14 +28,29 @@ interface SidebarDemoProps {
 export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("");
-  const pathname = usePathname(); // 👈 yeh hook hamesha current route deta hai
+  const pathname = usePathname();
   const router = useRouter();
 
   const links = [
     {
-      label: "Tenant",
+      label: "Accounts",
+      href: "/dashboard/accounts",
+      icon: <Users className="h-5 w-5 shrink-0" />,
+    },
+    {
+      label: "Account Tenants",
       href: "/dashboard/tenants",
       icon: <Building className="h-5 w-5 shrink-0" />,
+    },
+    {
+      label: "Invoice Headers",
+      href: "/dashboard/invoice-headers",
+      icon: <Receipt className="h-5 w-5 shrink-0" />,
+    },
+    {
+      label: "Invoice Lines",
+      href: "/dashboard/invoice-lines",
+      icon: <List className="h-5 w-5 shrink-0" />,
     },
     {
       label: "Billing History",
@@ -59,7 +77,7 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
   // Logout function
   const handleLogOut = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    window.location.href = "http://localhost:3000";
   };
 
   useEffect(() => {
@@ -78,12 +96,11 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
       setUser(user);
     }
     if (!user) {
-      router.push("/login");
+      window.location.href = "http://localhost:3000";
     }
     console.log("user id:" + user?.id);
   };
 
-  // 👇 active tab ko update karne ka hook
   useEffect(() => {
     if (pathname) {
       setActiveTab(pathname);
@@ -97,11 +114,15 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
           <Logo />
           <div className="mt-8 flex flex-col gap-2">
             {links.map((link, idx) => (
-              <SidebarLink key={idx} link={link} className={`${
+              <SidebarLink
+                key={idx}
+                link={link}
+                className={`${
                   pathname === link.href
                     ? "bg-gray-300 text-blue-400"
                     : "hover:bg-gray-200"
-                } rounded-md pl-1`}/>
+                } rounded-md pl-1`}
+              />
             ))}
           </div>
         </div>
