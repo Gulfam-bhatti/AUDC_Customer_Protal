@@ -4,39 +4,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { InvoiceLineForm } from "@/components/customer-portal/invoices/InvoiceLineForm";
 import { InvoiceLinesTable } from "@/components/customer-portal/invoices/InvoiceLinesTable";
 
-interface InvoiceLine {
-  invoice_line_id?: string;
-  invoice_id: string;
-  product_id?: string;
-  tenant_id?: string;
-  quantity?: number;
-  currency: string;
-  line_number?: number;
-  line_subtotal?: number;
-  line_discount?: number;
-  line_tax?: number;
-  line_total?: number;
-}
-
 export default function InvoiceLinesPage() {
   const [showForm, setShowForm] = useState(false);
-  const [editingLine, setEditingLine] = useState<InvoiceLine | undefined>();
+  const [editingLine, setEditingLine] = useState<any>();
   const [refresh, setRefresh] = useState(false);
   const [invoiceHeaderId, setInvoiceHeaderId] = useState<string>("");
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const invoiceId = searchParams.get('invoice_id');
-    if (invoiceId) {
+    const invoiceId = searchParams.get("invoice_id");
+    if (invoiceId && invoiceId.trim()) {
       setInvoiceHeaderId(invoiceId);
     } else {
-      // If no invoice_id, redirect back to invoice headers
-      router.push('/dashboard/invoice-headers');
+      // Redirect back if no valid invoice ID
+      router.push("/dashboard/invoice-headers");
     }
   }, [searchParams, router]);
 
-  const handleEdit = (line: InvoiceLine) => {
+  const handleEdit = (line: any) => {
     setEditingLine(line);
     setShowForm(true);
   };
@@ -46,9 +32,7 @@ export default function InvoiceLinesPage() {
     setShowForm(true);
   };
 
-  const handleBack = () => {
-    router.push('/dashboard/invoice-headers');
-  };
+  const handleBack = () => router.push("/dashboard/invoice-headers");
 
   const handleSave = () => {
     setShowForm(false);
@@ -61,18 +45,26 @@ export default function InvoiceLinesPage() {
     setEditingLine(undefined);
   };
 
+  // Don't render if no invoice ID
   if (!invoiceHeaderId) {
-    return <div className="p-4">Loading...</div>;
+    return (
+      <div className="p-4 text-center">
+        <p>Loading invoice details...</p>
+        <p className="text-sm text-gray-500 mt-2">
+          Invoice ID: {searchParams.get("invoice_id") || "Not provided"}
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {showForm ? (
         <InvoiceLineForm
-          line={editingLine}
           invoiceHeaderId={invoiceHeaderId}
-          onSave={handleSave}
-          onCancel={handleCancel}
+          editingLine={editingLine}
+          onSaved={handleSave}
+          onClose={handleCancel}
         />
       ) : (
         <InvoiceLinesTable

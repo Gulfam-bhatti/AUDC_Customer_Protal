@@ -60,6 +60,7 @@ const currencies = [
   { value: "GBP", label: "GBP" },
   { value: "CAD", label: "CAD" },
   { value: "AUD", label: "AUD" },
+  { value: "PKR", label: "PKR" },
 ];
 
 export function InvoiceHeaderForm({
@@ -85,9 +86,11 @@ export function InvoiceHeaderForm({
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAccounts();
+    getCurrentUser();
     if (invoice) {
       setFormData({
         ...invoice,
@@ -96,6 +99,19 @@ export function InvoiceHeaderForm({
       });
     }
   }, [invoice]);
+
+  const getCurrentUser = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    } catch (error: any) {
+      console.error("Error getting current user:", error.message);
+      toast.error("Error getting current user");
+    }
+  };
 
   const fetchAccounts = async () => {
     try {
@@ -115,14 +131,42 @@ export function InvoiceHeaderForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.account_id) {
+      toast.error("Please select an account");
+      return;
+    }
+
+    if (!currentUserId) {
+      toast.error("User not authenticated");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Clean data - convert empty strings to null for optional UUID fields
+      const cleanData = {
+        account_id: formData.account_id || null,
+        billing_cycle: formData.billing_cycle || null,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
+        status: formData.status,
+        currency: formData.currency,
+        failed_payment_count: formData.failed_payment_count || 0,
+        subtotal_amount: formData.subtotal_amount || null,
+        discount_amount: formData.discount_amount || null,
+        total_amount: formData.total_amount || null,
+        tax_amount: formData.tax_amount || null,
+        created_by: currentUserId, // Add created_by field
+      };
+
       if (invoice?.invoice_id) {
         const { error } = await supabase
           .schema("customer_portal")
           .from("invoice_headers")
-          .update(formData)
+          .update(cleanData)
           .eq("invoice_id", invoice.invoice_id);
 
         if (error) throw error;
@@ -131,7 +175,7 @@ export function InvoiceHeaderForm({
         const { error } = await supabase
           .schema("customer_portal")
           .from("invoice_headers")
-          .insert([formData]);
+          .insert([cleanData]);
 
         if (error) throw error;
         toast.success("Invoice created successfully");
@@ -148,12 +192,12 @@ export function InvoiceHeaderForm({
     const { name, value, type } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "number" ? parseFloat(value) || 0 : value,
+      [name]: type === "number" ? (value === "" ? 0 : parseFloat(value)) : value,
     });
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto">
       <h2 className="text-xl font-bold mb-6">
         {invoice?.invoice_id ? "Edit Invoice" : "Add New Invoice"}
       </h2>
@@ -213,7 +257,7 @@ export function InvoiceHeaderForm({
               <Input
                 type="date"
                 name="start_date"
-                value={formData.start_date}
+                value={formData.start_date || ""}
                 onChange={handleChange}
               />
             </div>
@@ -222,7 +266,7 @@ export function InvoiceHeaderForm({
               <Input
                 type="date"
                 name="end_date"
-                value={formData.end_date}
+                value={formData.end_date || ""}
                 onChange={handleChange}
               />
             </div>
@@ -277,31 +321,66 @@ export function InvoiceHeaderForm({
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-4">Financial Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              "subtotal_amount",
-              "discount_amount",
-              "tax_amount",
-              "total_amount",
-              "failed_payment_count",
-            ].map((field) => (
-              <div key={field}>
-                <Label className="capitalize">{field.replace("_", " ")}</Label>
-                <Input
-                  type="number"
-                  name={field}
-                  step="0.01"
-                  min="0"
-                  value={(formData as any)[field] || 0}
-                  onChange={handleChange}
-                />
-              </div>
-            ))}
+            <div>
+              <Label>Subtotal Amount</Label>
+              <Input
+                type="number"
+                name="subtotal_amount"
+                step="0.01"
+                min="0"
+                value={formData.subtotal_amount || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <Label>Discount Amount</Label>
+              <Input
+                type="number"
+                name="discount_amount"
+                step="0.01"
+                min="0"
+                value={formData.discount_amount || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <Label>Tax Amount</Label>
+              <Input
+                type="number"
+                name="tax_amount"
+                step="0.01"
+                min="0"
+                value={formData.tax_amount || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <Label>Total Amount</Label>
+              <Input
+                type="number"
+                name="total_amount"
+                step="0.01"
+                min="0"
+                value={formData.total_amount || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <Label>Failed Payment Count</Label>
+              <Input
+                type="number"
+                name="failed_payment_count"
+                min="0"
+                value={formData.failed_payment_count || 0}
+                onChange={handleChange}
+              />
+            </div>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex space-x-4 pt-4">
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading || !formData.account_id || !currentUserId}>
             {loading ? "Saving..." : "Save Invoice"}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel}>

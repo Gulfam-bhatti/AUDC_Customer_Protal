@@ -1,5 +1,6 @@
 "use client";
 import { CoolMode } from "@/components/magicui/cool-mode";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,16 +19,7 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import {
-  Badge,
-  Calendar,
-  DollarSign,
-  Download,
-  Eye,
-  Users,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Download, Eye, Users, CheckCircle, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -141,7 +133,10 @@ export default function BillingHistoryPage() {
               </p>
             </div>
             <CoolMode>
-              <Button onClick={() => router.push('/dashboard/tenants/add_new_tenant')} className="bg-gradient-to-r cursor-pointer from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button
+                onClick={() => router.push("/dashboard/tenants/add_new_tenant")}
+                className="bg-gradient-to-r cursor-pointer from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Export All
               </Button>
@@ -246,14 +241,17 @@ export default function BillingHistoryPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="hover:bg-blue-50"
+                            className="hover:bg-blue-50 cursor-pointer"
+                            onClick={() =>
+                              router.push(`/dashboard/tenants/${tenant.id}`)
+                            }
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="hover:bg-emerald-50"
+                            className="hover:bg-emerald-50 cursor-pointer"
                           >
                             <Download className="w-4 h-4" />
                           </Button>

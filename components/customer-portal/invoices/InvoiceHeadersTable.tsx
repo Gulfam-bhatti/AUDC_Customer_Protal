@@ -4,6 +4,15 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import toast from "react-hot-toast";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface InvoiceHeader {
   invoice_id: string;
@@ -110,6 +119,32 @@ export function InvoiceHeadersTable({
     }
   };
 
+  const getBillingCycleColor = (cycle?: string) => {
+    switch (cycle?.toLowerCase()) {
+      case "monthly":
+        return "bg-blue-100 text-blue-800";
+      case "quarterly":
+        return "bg-purple-100 text-purple-800";
+      case "yearly":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getCurrencyColor = (currency?: string) => {
+    switch (currency?.toUpperCase()) {
+      case "USD":
+        return "bg-indigo-100 text-indigo-800";
+      case "PKR":
+        return "bg-emerald-100 text-emerald-800";
+      case "EUR":
+        return "bg-pink-100 text-pink-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   if (loading) {
     return <div className="p-4">Loading invoice headers...</div>;
   }
@@ -124,99 +159,104 @@ export function InvoiceHeadersTable({
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Invoice ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Company
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Billing Cycle
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Period
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Amount
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {invoices.map((invoice) => (
-              <tr key={invoice.invoice_id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {invoice.invoice_id.substring(0, 8)}...
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {invoice.account?.company_name || "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+      <Table>
+        <TableCaption>A list of recent invoices.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Invoice ID</TableHead>
+            <TableHead>Company</TableHead>
+            <TableHead>Billing Cycle</TableHead>
+            <TableHead>Period</TableHead>
+            <TableHead>Total Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Currency</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invoices.map((invoice) => (
+            <TableRow key={invoice.invoice_id}>
+              <TableCell className="font-medium">
+                {invoice.invoice_id.substring(0, 8)}...
+              </TableCell>
+              <TableCell>{invoice.account?.company_name || "N/A"}</TableCell>
+              <TableCell>
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getBillingCycleColor(
+                    invoice.billing_cycle
+                  )}`}
+                >
                   {invoice.billing_cycle || "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {invoice.start_date && invoice.end_date
-                    ? `${new Date(invoice.start_date).toLocaleDateString()} - ${new Date(invoice.end_date).toLocaleDateString()}`
-                    : "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {invoice.currency}{" "}
-                  {invoice.total_amount?.toFixed(2) || "0.00"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                </span>
+              </TableCell>
+              <TableCell>
+                {invoice.start_date && invoice.end_date
+                  ? `${new Date(invoice.start_date).toLocaleDateString()} - ${new Date(
+                      invoice.end_date
+                    ).toLocaleDateString()}`
+                  : "N/A"}
+              </TableCell>
+              <TableCell>
+                {invoice.total_amount?.toFixed(2) || "0.00"}
+              </TableCell>
+              <TableCell>
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                    invoice.status
+                  )}`}
+                >
+                  {invoice.status || "Draft"}
+                </span>
+              </TableCell>
+              <TableCell>
+                {invoice.currency ? (
                   <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}`}
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCurrencyColor(
+                      invoice.currency
+                    )}`}
                   >
-                    {invoice.status || "Draft"}
+                    {invoice.currency}
                   </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onViewLines(invoice.invoice_id)}
-                      title="View Invoice Lines"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(invoice)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(invoice.invoice_id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {invoices.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No invoice headers found. Click "Add Invoice" to create your first
-            invoice.
-          </div>
-        )}
-      </div>
+                ) : (
+                  "N/A"
+                )}
+              </TableCell>
+              <TableCell className="text-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onViewLines(invoice.invoice_id)}
+                  title="View Invoice Lines"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(invoice)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDelete(invoice.invoice_id)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {invoices.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No invoice headers found. Click "Add Invoice" to create your first
+          invoice.
+        </div>
+      )}
     </div>
   );
 }

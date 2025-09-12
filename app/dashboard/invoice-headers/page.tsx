@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { InvoiceHeaderForm } from "@/components/customer-portal/invoices/InvoiceHeaderForm";
 import { InvoiceHeadersTable } from "@/components/customer-portal/invoices/InvoiceHeadersTable";
+import toast from "react-hot-toast";
 
 interface InvoiceHeader {
   invoice_id?: string;
@@ -36,7 +37,13 @@ export default function InvoiceHeadersPage() {
   };
 
   const handleViewLines = (invoiceId: string) => {
-    router.push(`/dashboard/invoice-lines?invoice_id=${invoiceId}`);
+    // Ensure invoiceId is valid UUID before navigation
+    if (invoiceId && invoiceId.trim()) {
+      router.push(`/dashboard/invoice-lines?invoice_id=${encodeURIComponent(invoiceId)}`);
+    } else {
+      console.error("Invalid invoice ID:", invoiceId);
+      toast.error("Invalid invoice ID");
+    }
   };
 
   const handleSave = () => {
