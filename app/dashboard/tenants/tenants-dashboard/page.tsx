@@ -565,7 +565,7 @@ export default function AllTenantsAnalytics() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => window.open(`/tenants/${tenant.id}/analytics`, '_blank')}
+                        onClick={() => window.open(`/dashboard/tenants/${tenant.id}`)}
                         className="text-indigo-600 hover:text-indigo-900 mr-3"
                       >
                         View Details
