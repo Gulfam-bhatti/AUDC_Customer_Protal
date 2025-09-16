@@ -308,7 +308,6 @@ export default function AddTenantPage() {
                 {servers.map((server) => (
                   <SelectItem
                     key={server.id}
-                    value={server.id}
                     textValue={server.name}
                   >
                     <div className="flex flex-col">
@@ -349,7 +348,6 @@ export default function AddTenantPage() {
                 {products.map((product) => (
                   <SelectItem
                     key={product.product_id}
-                    value={product.product_id}
                     textValue={product.plan_name}
                   >
                     <div className="flex flex-col">
