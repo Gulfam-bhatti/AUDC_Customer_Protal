@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
@@ -14,6 +14,7 @@ import {
 } from "chart.js";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 ChartJS.register(
   CategoryScale,
@@ -60,6 +61,8 @@ interface TenantStats {
 }
 
 export default function AllTenantsAnalytics() {
+  const router = useRouter();
+
   const [allTenants, setAllTenants] = useState<Tenant[]>([]);
   const [stats, setStats] = useState<TenantStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,42 +106,51 @@ export default function AllTenantsAnalytics() {
 
     const tenantStats: TenantStats = {
       totalTenants: tenants.length,
-      activeTenants: tenants.filter(t => t.is_active).length,
-      inactiveTenants: tenants.filter(t => !t.is_active).length,
-      tenantsWithDomain: tenants.filter(t => t.domain).length,
-      tenantsWithSchema: tenants.filter(t => t.schema_created).length,
+      activeTenants: tenants.filter((t) => t.is_active).length,
+      inactiveTenants: tenants.filter((t) => !t.is_active).length,
+      tenantsWithDomain: tenants.filter((t) => t.domain).length,
+      tenantsWithSchema: tenants.filter((t) => t.schema_created).length,
       tenantsByStatus: {},
       tenantsByTimeZone: {},
       serverDistribution: {},
-      recentlyCreated: tenants.filter(t => new Date(t.created_at) > thirtyDaysAgo).length,
+      recentlyCreated: tenants.filter(
+        (t) => new Date(t.created_at) > thirtyDaysAgo
+      ).length,
       monthlyGrowth: {},
     };
 
     // Group by status
-    tenants.forEach(tenant => {
-      const status = tenant.status || (tenant.is_active ? 'active' : 'inactive');
-      tenantStats.tenantsByStatus[status] = (tenantStats.tenantsByStatus[status] || 0) + 1;
+    tenants.forEach((tenant) => {
+      const status =
+        tenant.status || (tenant.is_active ? "active" : "inactive");
+      tenantStats.tenantsByStatus[status] =
+        (tenantStats.tenantsByStatus[status] || 0) + 1;
     });
 
     // Group by timezone
-    tenants.forEach(tenant => {
-      const tz = tenant.time_zone || 'UTC';
-      tenantStats.tenantsByTimeZone[tz] = (tenantStats.tenantsByTimeZone[tz] || 0) + 1;
+    tenants.forEach((tenant) => {
+      const tz = tenant.time_zone || "UTC";
+      tenantStats.tenantsByTimeZone[tz] =
+        (tenantStats.tenantsByTimeZone[tz] || 0) + 1;
     });
 
     // Group by server
-    tenants.forEach(tenant => {
-      const serverId = tenant.server_id.substring(0, 8) + '...';
-      tenantStats.serverDistribution[serverId] = (tenantStats.serverDistribution[serverId] || 0) + 1;
+    tenants.forEach((tenant) => {
+      const serverId = tenant.server_id.substring(0, 8) + "...";
+      tenantStats.serverDistribution[serverId] =
+        (tenantStats.serverDistribution[serverId] || 0) + 1;
     });
 
     // Calculate monthly growth for last 12 months
     for (let i = 11; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      
-      tenantStats.monthlyGrowth[monthKey] = tenants.filter(tenant => {
+      const monthKey = date.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      });
+
+      tenantStats.monthlyGrowth[monthKey] = tenants.filter((tenant) => {
         const createdAt = new Date(tenant.created_at);
         return createdAt >= date && createdAt < nextMonth;
       }).length;
@@ -174,13 +186,13 @@ export default function AllTenantsAnalytics() {
 
     const labels = Object.keys(stats.tenantsByStatus);
     const data = Object.values(stats.tenantsByStatus);
-    
+
     const colors = [
-      'rgba(75, 192, 192, 0.8)',
-      'rgba(255, 99, 132, 0.8)',
-      'rgba(255, 205, 86, 0.8)',
-      'rgba(54, 162, 235, 0.8)',
-      'rgba(153, 102, 255, 0.8)',
+      "rgba(75, 192, 192, 0.8)",
+      "rgba(255, 99, 132, 0.8)",
+      "rgba(255, 205, 86, 0.8)",
+      "rgba(54, 162, 235, 0.8)",
+      "rgba(153, 102, 255, 0.8)",
     ];
 
     return {
@@ -189,7 +201,9 @@ export default function AllTenantsAnalytics() {
         {
           data,
           backgroundColor: colors.slice(0, labels.length),
-          borderColor: colors.slice(0, labels.length).map(color => color.replace('0.8', '1')),
+          borderColor: colors
+            .slice(0, labels.length)
+            .map((color) => color.replace("0.8", "1")),
           borderWidth: 2,
         },
       ],
@@ -201,7 +215,7 @@ export default function AllTenantsAnalytics() {
     if (!stats) return null;
 
     const sortedTimezones = Object.entries(stats.tenantsByTimeZone)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 10); // Top 10 timezones
 
     return {
@@ -209,7 +223,7 @@ export default function AllTenantsAnalytics() {
       datasets: [
         {
           label: "Tenants",
-          data: sortedTimezones.map(([,count]) => count),
+          data: sortedTimezones.map(([, count]) => count),
           backgroundColor: "rgba(153, 102, 255, 0.6)",
           borderColor: "rgba(153, 102, 255, 1)",
           borderWidth: 1,
@@ -240,15 +254,18 @@ export default function AllTenantsAnalytics() {
   };
 
   // Filter tenants based on search and status
-  const filteredTenants = allTenants.filter(tenant => {
-    const matchesSearch = tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tenant.access_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (tenant.domain && tenant.domain.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === "all" || 
-                         (statusFilter === "active" && tenant.is_active) ||
-                         (statusFilter === "inactive" && !tenant.is_active) ||
-                         tenant.status === statusFilter;
+  const filteredTenants = allTenants.filter((tenant) => {
+    const matchesSearch =
+      tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.access_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tenant.domain &&
+        tenant.domain.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && tenant.is_active) ||
+      (statusFilter === "inactive" && !tenant.is_active) ||
+      tenant.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -300,37 +317,66 @@ export default function AllTenantsAnalytics() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-medium text-gray-900">Total Tenants</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">{stats?.totalTenants.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-blue-600 mt-2">
+              {stats?.totalTenants.toLocaleString()}
+            </p>
             <p className="text-sm text-gray-500 mt-1">All registered</p>
           </div>
-          
+
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-medium text-gray-900">Active Tenants</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">{stats?.activeTenants.toLocaleString()}</p>
+            <h3 className="text-lg font-medium text-gray-900">
+              Active Tenants
+            </h3>
+            <p className="text-3xl font-bold text-green-600 mt-2">
+              {stats?.activeTenants.toLocaleString()}
+            </p>
             <p className="text-sm text-gray-500 mt-1">
-              {stats ? ((stats.activeTenants / stats.totalTenants) * 100).toFixed(1) : 0}% of total
+              {stats
+                ? ((stats.activeTenants / stats.totalTenants) * 100).toFixed(1)
+                : 0}
+              % of total
             </p>
           </div>
-          
+
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-medium text-gray-900">With Domains</h3>
-            <p className="text-3xl font-bold text-purple-600 mt-2">{stats?.tenantsWithDomain.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-purple-600 mt-2">
+              {stats?.tenantsWithDomain.toLocaleString()}
+            </p>
             <p className="text-sm text-gray-500 mt-1">
-              {stats ? ((stats.tenantsWithDomain / stats.totalTenants) * 100).toFixed(1) : 0}% configured
+              {stats
+                ? (
+                    (stats.tenantsWithDomain / stats.totalTenants) *
+                    100
+                  ).toFixed(1)
+                : 0}
+              % configured
             </p>
           </div>
-          
+
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-medium text-gray-900">Schema Ready</h3>
-            <p className="text-3xl font-bold text-indigo-600 mt-2">{stats?.tenantsWithSchema.toLocaleString()}</p>
+            <p className="text-3xl font-bold text-indigo-600 mt-2">
+              {stats?.tenantsWithSchema.toLocaleString()}
+            </p>
             <p className="text-sm text-gray-500 mt-1">
-              {stats ? ((stats.tenantsWithSchema / stats.totalTenants) * 100).toFixed(1) : 0}% ready
+              {stats
+                ? (
+                    (stats.tenantsWithSchema / stats.totalTenants) *
+                    100
+                  ).toFixed(1)
+                : 0}
+              % ready
             </p>
           </div>
-          
+
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-medium text-gray-900">Recent Signups</h3>
-            <p className="text-3xl font-bold text-orange-600 mt-2">{stats?.recentlyCreated.toLocaleString()}</p>
+            <h3 className="text-lg font-medium text-gray-900">
+              Recent Signups
+            </h3>
+            <p className="text-3xl font-bold text-orange-600 mt-2">
+              {stats?.recentlyCreated.toLocaleString()}
+            </p>
             <p className="text-sm text-gray-500 mt-1">Last 30 days</p>
           </div>
         </div>
@@ -340,7 +386,9 @@ export default function AllTenantsAnalytics() {
           {/* Growth Chart */}
           {growthData && (
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Monthly Growth Trend</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Monthly Growth Trend
+              </h2>
               <Line
                 options={{
                   ...chartOptions,
@@ -348,17 +396,17 @@ export default function AllTenantsAnalytics() {
                     ...chartOptions.plugins,
                     title: {
                       display: true,
-                      text: "New Tenant Registrations (Last 12 Months)"
-                    }
+                      text: "New Tenant Registrations (Last 12 Months)",
+                    },
                   },
                   scales: {
                     y: {
                       beginAtZero: true,
                       ticks: {
-                        stepSize: 1
-                      }
-                    }
-                  }
+                        stepSize: 1,
+                      },
+                    },
+                  },
                 }}
                 data={growthData}
               />
@@ -368,7 +416,9 @@ export default function AllTenantsAnalytics() {
           {/* Status Distribution */}
           {statusData && (
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Status Distribution</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Status Distribution
+              </h2>
               <div className="h-64 flex items-center justify-center">
                 <Doughnut
                   options={{
@@ -400,10 +450,10 @@ export default function AllTenantsAnalytics() {
                     ...chartOptions.plugins,
                     title: {
                       display: true,
-                      text: "Tenants by Timezone (Top 10)"
-                    }
+                      text: "Tenants by Timezone (Top 10)",
+                    },
                   },
-                  indexAxis: 'y' as const,
+                  indexAxis: "y" as const,
                 }}
                 data={timezoneData}
               />
@@ -413,7 +463,9 @@ export default function AllTenantsAnalytics() {
           {/* Server Distribution */}
           {serverData && (
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Server Distribution</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Server Distribution
+              </h2>
               <Bar
                 options={{
                   ...chartOptions,
@@ -421,9 +473,9 @@ export default function AllTenantsAnalytics() {
                     ...chartOptions.plugins,
                     title: {
                       display: true,
-                      text: "Tenants per Server"
-                    }
-                  }
+                      text: "Tenants per Server",
+                    },
+                  },
                 }}
                 data={serverData}
               />
@@ -434,8 +486,10 @@ export default function AllTenantsAnalytics() {
         {/* Tenants List Section */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h2 className="text-xl font-semibold">All Tenants ({filteredTenants.length})</h2>
-            
+            <h2 className="text-xl font-semibold">
+              All Tenants ({filteredTenants.length})
+            </h2>
+
             <div className="flex flex-col md:flex-row gap-4 mt-4 md:mt-0">
               {/* Search Input */}
               <div className="relative">
@@ -447,8 +501,18 @@ export default function AllTenantsAnalytics() {
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </div>
               </div>
@@ -462,11 +526,12 @@ export default function AllTenantsAnalytics() {
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-                {stats && Object.keys(stats.tenantsByStatus).map(status => (
-                  <option key={status} value={status}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </option>
-                ))}
+                {stats &&
+                  Object.keys(stats.tenantsByStatus).map((status) => (
+                    <option key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>
@@ -508,8 +573,12 @@ export default function AllTenantsAnalytics() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{tenant.name}</div>
-                          <div className="text-sm text-gray-500">{tenant.id.substring(0, 8)}...</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {tenant.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {tenant.id.substring(0, 8)}...
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -519,22 +588,27 @@ export default function AllTenantsAnalytics() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        tenant.is_active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          tenant.is_active ? 'bg-green-500' : 'bg-red-500'
-                        }`}></div>
-                        {tenant.status || (tenant.is_active ? 'Active' : 'Inactive')}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          tenant.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        <div
+                          className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                            tenant.is_active ? "bg-green-500" : "bg-red-500"
+                          }`}
+                        ></div>
+                        {tenant.status ||
+                          (tenant.is_active ? "Active" : "Inactive")}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {tenant.domain ? (
-                        <a 
-                          href={`https://${tenant.domain}`} 
-                          target="_blank" 
+                        <a
+                          href={`https://${tenant.domain}`}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-900 underline"
                         >
@@ -545,27 +619,31 @@ export default function AllTenantsAnalytics() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        tenant.schema_created 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {tenant.schema_created ? 'Ready' : 'Pending'}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          tenant.schema_created
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {tenant.schema_created ? "Ready" : "Pending"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {tenant.time_zone}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(tenant.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
+                      {new Date(tenant.created_at).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
                       })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => window.open(`/dashboard/tenants/${tenant.id}`)}
+                        onClick={() =>
+                          router.push(`/dashboard/tenants/${tenant.id}`)
+                        }
                         className="text-indigo-600 hover:text-indigo-900 mr-3"
                       >
                         View Details
@@ -586,7 +664,9 @@ export default function AllTenantsAnalytics() {
 
           {filteredTenants.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-gray-500">No tenants found matching your criteria.</p>
+              <p className="text-gray-500">
+                No tenants found matching your criteria.
+              </p>
             </div>
           )}
         </div>
@@ -594,12 +674,16 @@ export default function AllTenantsAnalytics() {
         {/* Summary Statistics */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Configuration Summary</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Configuration Summary
+            </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">With Business Registration</span>
+                <span className="text-gray-600">
+                  With Business Registration
+                </span>
                 <span className="font-semibold">
-                  {allTenants.filter(t => t.business_reg_number).length}
+                  {allTenants.filter((t) => t.business_reg_number).length}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -612,51 +696,80 @@ export default function AllTenantsAnalytics() {
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Growth Metrics</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Growth Metrics
+            </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Average per Month</span>
                 <span className="font-semibold">
-                  {stats ? Math.round(Object.values(stats.monthlyGrowth).reduce((a, b) => a + b, 0) / 12) : 0}
+                  {stats
+                    ? Math.round(
+                        Object.values(stats.monthlyGrowth).reduce(
+                          (a, b) => a + b,
+                          0
+                        ) / 12
+                      )
+                    : 0}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Peak Month</span>
                 <span className="font-semibold">
-                  {stats ? Math.max(...Object.values(stats.monthlyGrowth)) : 0} tenants
+                  {stats ? Math.max(...Object.values(stats.monthlyGrowth)) : 0}{" "}
+                  tenants
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Growth Rate</span>
                 <span className="font-semibold text-green-600">
-                  {stats?.recentlyCreated && stats.totalTenants 
+                  {stats?.recentlyCreated && stats.totalTenants
                     ? `+${((stats.recentlyCreated / (stats.totalTenants - stats.recentlyCreated)) * 100).toFixed(1)}%`
-                    : '0%'
-                  }
+                    : "0%"}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">System Health</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              System Health
+            </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Active Rate</span>
                 <span className="font-semibold text-green-600">
-                  {stats ? ((stats.activeTenants / stats.totalTenants) * 100).toFixed(1) : 0}%
+                  {stats
+                    ? (
+                        (stats.activeTenants / stats.totalTenants) *
+                        100
+                      ).toFixed(1)
+                    : 0}
+                  %
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Schema Completion</span>
                 <span className="font-semibold text-blue-600">
-                  {stats ? ((stats.tenantsWithSchema / stats.totalTenants) * 100).toFixed(1) : 0}%
+                  {stats
+                    ? (
+                        (stats.tenantsWithSchema / stats.totalTenants) *
+                        100
+                      ).toFixed(1)
+                    : 0}
+                  %
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Domain Setup</span>
                 <span className="font-semibold text-purple-600">
-                  {stats ? ((stats.tenantsWithDomain / stats.totalTenants) * 100).toFixed(1) : 0}%
+                  {stats
+                    ? (
+                        (stats.tenantsWithDomain / stats.totalTenants) *
+                        100
+                      ).toFixed(1)
+                    : 0}
+                  %
                 </span>
               </div>
             </div>
