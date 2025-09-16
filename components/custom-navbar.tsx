@@ -113,7 +113,7 @@ function CustomNavbar() {
               className="mt-4"
               color="primary"
               onClick={() =>
-                (window.location.href = "https://localhost:3000/login")
+                (window.location.href = "https://audc-branding-website.vercel.app/login")
               }
             >
               Login
