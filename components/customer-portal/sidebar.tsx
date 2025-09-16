@@ -77,7 +77,7 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
   // Logout function
   const handleLogOut = async () => {
     await supabase.auth.signOut();
-    window.location.href = "http://localhost:3000";
+    window.location.href = "http://localhost:3000/login";
   };
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
       setUser(user);
     }
     if (!user) {
-      window.location.href = "http://localhost:3000";
+      window.location.href = "http://localhost:3000/login";
     }
     console.log("user id:" + user?.id);
   };
