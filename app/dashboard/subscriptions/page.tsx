@@ -207,6 +207,12 @@ export default function SubscriptionPage() {
   });
 
   useEffect(() => {
+    // Check for current plan in local storage on component mount
+    const savedPlan = localStorage.getItem("currentPlan");
+    if (savedPlan) {
+      setCurrentPlan(savedPlan);
+    }
+
     async function fetchData() {
       try {
         // Fetch products
@@ -260,6 +266,8 @@ export default function SubscriptionPage() {
 
           if (subscriptionData) {
             setCurrentPlan(subscriptionData.product_id);
+            // Save current plan to local storage
+            localStorage.setItem("currentPlan", subscriptionData.product_id);
           }
         }
       } catch (error) {
@@ -362,6 +370,9 @@ export default function SubscriptionPage() {
 
       // Update current plan state
       setCurrentPlan(selectedPlan.product_id);
+
+      // Save current plan to local storage
+      localStorage.setItem("currentPlan", selectedPlan.product_id);
 
       // Close dialog and reset form
       setIsUpgradeDialogOpen(false);
