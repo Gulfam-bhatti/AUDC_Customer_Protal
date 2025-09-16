@@ -77,7 +77,7 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
   // Logout function
   const handleLogOut = async () => {
     await supabase.auth.signOut();
-    window.location.href = "http://localhost:3000/login";
+    window.location.href = "https://audc-branding-website.vercel.app/login";
   };
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
       setUser(user);
     }
     if (!user) {
-      window.location.href = "http://localhost:3000/login";
+      window.location.href = "https://audc-branding-website.vercel.app/login";
     }
     console.log("user id:" + user?.id);
   };

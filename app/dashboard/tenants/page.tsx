@@ -101,7 +101,7 @@ export default function BillingHistoryPage() {
       setUser(user);
     }
     if (!user) {
-      window.location.href = "http://localhost:3000/login";
+      window.location.href = "https://audc-branding-website.vercel.app/login";
     }
     console.log("user id:" + user?.id);
   };
