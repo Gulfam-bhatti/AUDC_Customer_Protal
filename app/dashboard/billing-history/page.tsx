@@ -1,567 +1,480 @@
+// app/billing/page.tsx
 "use client";
-import { useState, useEffect } from "react";
+
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Download, Search, RefreshCw, Eye, FileText } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/lib/supabase";
-import toast from "react-hot-toast";
-import { BillingStats } from "@/components/customer-portal/billing/billingstates";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { ChevronDown, ChevronRight, Package, Building } from "lucide-react";
 
 interface InvoiceHeader {
   invoice_id: string;
-  account_id: string;
-  account?: { company_name: string };
-  billing_cycle?: string;
-  start_date?: string;
-  end_date?: string;
-  status: string;
-  currency: string;
-  failed_payment_count: number;
-  subtotal_amount?: number;
-  discount_amount?: number;
-  total_amount?: number;
-  tax_amount?: number;
+  account_id: string | null;
+  billing_cycle: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  status: string | null;
+  currency: string | null;
+  failed_payment_count: number | null;
+  subtotal_amount: number | null;
+  discount_amount: number | null;
+  total_amount: number | null;
+  tax_amount: number | null;
+  created_by: string | null;
   created_at: string;
 }
 
 interface InvoiceLine {
   invoice_line_id: string;
-  invoice_id: string;
-  product_id?: string;
-  tenant_id?: string;
-  quantity?: number;
-  currency: string;
-  line_number?: number;
-  line_subtotal?: number;
-  line_discount?: number;
-  line_tax?: number;
-  line_total?: number;
+  invoice_id: string | null;
+  product_id: string | null;
+  tenant_id: string | null;
+  quantity: number | null;
+  currency: string | null;
+  line_number: number | null;
+  line_subtotal: number | null;
+  line_discount: number | null;
+  line_tax: number | null;
+  line_total: number | null;
+  created_by: string | null;
   created_at: string;
-  product_name?: string;
-  tenant_name?: string;
+  modified_at: string | null;
+  modified_by: string | null;
+  product?: {
+    product_id: string;
+    product_name: string;
+    plan_name: string;
+    monthly_price: number;
+    annual_price: number;
+    currency: string;
+  };
+  tenant?: {
+    id: string;
+    name: string;
+    domain: string | null;
+  };
 }
 
 export default function BillingHistoryPage() {
   const [invoices, setInvoices] = useState<InvoiceHeader[]>([]);
-  const [lines, setLines] = useState<InvoiceLine[]>([]);
-  const [filteredInvoices, setFilteredInvoices] = useState<InvoiceHeader[]>([]);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [invoiceLines, setInvoiceLines] = useState<Record<string, InvoiceLine[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
-
-  // State to manage the currently open dialog
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [currentInvoice, setCurrentInvoice] = useState<InvoiceHeader | null>(null);
-
-  // Fetch invoice headers from Supabase
-  const fetchInvoiceHeaders = async () => {
-    try {
-      const { data, error } = await supabase
-        .schema("customer_portal")
-        .from("invoice_headers")
-        .select(`
-          *,
-          account:accounts(company_name)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching invoice headers:", error);
-        toast.error("Error fetching invoice headers: " + error.message);
-        return [];
-      }
-      return data || [];
-    } catch (error: unknown) {
-      console.error("Error fetching invoice headers:", error);
-      toast.error("Error fetching invoice headers");
-      return [];
-    }
-  };
-
-  // Fetch invoice lines from Supabase
-  const fetchInvoiceLines = async () => {
-    try {
-      const { data, error } = await supabase
-        .schema("customer_portal")
-        .from("invoice_lines")
-        .select("*")
-        .order("line_number", { ascending: true });
-
-      if (error) {
-        console.error("Error fetching invoice lines:", error);
-        toast.error("Error fetching invoice lines: " + error.message);
-        return [];
-      }
-
-      const productIds = data?.map(d => d.product_id).filter(Boolean) || [];
-      const tenantIds = data?.map(d => d.tenant_id).filter(Boolean) || [];
-
-      let products: { product_id: string; product_name: string }[] = [];
-      let tenants: { id: string; name: string }[] = [];
-
-      if (productIds.length > 0) {
-        const { data: productsData } = await supabase
-          .schema("shared")
-          .from("products")
-          .select("product_id, product_name")
-          .in("product_id", productIds);
-        products = productsData || [];
-      }
-
-      if (tenantIds.length > 0) {
-        const { data: tenantsData } = await supabase
-          .schema("shared")
-          .from("tenants")
-          .select("id, name")
-          .in("id", tenantIds);
-        tenants = tenantsData || [];
-      }
-
-      const linesWithNames = (data || []).map((line: InvoiceLine) => ({
-        ...line,
-        product_name: products.find(p => p.product_id === line.product_id)?.product_name,
-        tenant_name: tenants.find(t => t.id === line.tenant_id)?.name,
-      }));
-
-      return linesWithNames;
-    } catch (error: unknown) {
-      console.error("Error fetching invoice lines:", error);
-      toast.error("Error fetching invoice lines");
-      return [];
-    }
-  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [loadingLines, setLoadingLines] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    loadData();
-  }, []);
+    fetchInvoices();
+  }, [currentPage, statusFilter]);
 
-  const loadData = async () => {
-    setLoading(true);
+  const fetchInvoices = async () => {
     try {
-      const [invoiceHeaders, invoiceLines] = await Promise.all([
-        fetchInvoiceHeaders(),
-        fetchInvoiceLines()
-      ]);
-      setInvoices(invoiceHeaders);
-      setLines(invoiceLines);
-      setFilteredInvoices(invoiceHeaders);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      toast.error("Error loading billing data");
+      setLoading(true);
+      setError(null);
+
+      let query = supabase
+        .schema("customer_portal")
+        .from("invoice_headers")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
+
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setInvoices(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  // Stats calculation functions remain the same
-  const totalPaid = invoices.filter(inv => inv.status?.toLowerCase() === 'paid').reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-  const totalInvoices = invoices.length;
-  const nextPayment = invoices.filter(inv => inv.status?.toLowerCase() === 'pending').reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-  const primaryCurrency = invoices.length > 0 ? invoices[0].currency || "USD" : "USD";
-
-  useEffect(() => {
-    let filtered = invoices;
-    if (searchTerm) {
-      filtered = filtered.filter(invoice =>
-        invoice.account?.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invoice.invoice_id.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(invoice => invoice.status?.toLowerCase() === statusFilter.toLowerCase());
-    }
-    setFilteredInvoices(filtered);
-  }, [searchTerm, statusFilter, invoices]);
-
-  const handleRefresh = () => {
-    loadData();
-  };
-
-  const getInvoiceLines = (invoiceId: string) => {
-    return lines.filter(line => line.invoice_id === invoiceId);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'paid': return 'bg-green-100 text-green-800 border-green-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'overdue': return 'bg-red-100 text-red-800 border-red-200';
-      case 'draft': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'cancelled': return 'bg-slate-100 text-slate-800 border-slate-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getBillingCycleColor = (cycle?: string) => {
-    switch (cycle?.toLowerCase()) {
-      case 'monthly': return 'bg-blue-100 text-blue-800';
-      case 'quarterly': return 'bg-purple-100 text-purple-800';
-      case 'annually': return 'bg-orange-100 text-orange-800';
-      case 'one-time': return 'bg-indigo-100 text-indigo-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const handleViewInvoice = (invoice: InvoiceHeader) => {
-    setCurrentInvoice(invoice);
-    setDialogOpen(true);
-  };
-
-  const downloadInvoice = async (invoice: InvoiceHeader) => {
-    const invoiceElement = document.getElementById("invoice-bill-pdf-target");
-    if (!invoiceElement) {
-      toast.error("Invoice element not found!");
-      return;
-    }
-
-    toast.loading("Generating PDF...", { id: "download-toast" });
+  const fetchInvoiceLines = async (invoiceId: string) => {
+    if (invoiceLines[invoiceId]) return; // Already loaded
 
     try {
-      const canvas = await html2canvas(invoiceElement, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      setLoadingLines(prev => ({ ...prev, [invoiceId]: true }));
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`invoice-${invoice.invoice_id.substring(0, 8)}.pdf`);
-      toast.success("PDF downloaded successfully!", { id: "download-toast" });
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      toast.error("Failed to download invoice.", { id: "download-toast" });
+      // Fetch invoice lines
+      const { data: linesData, error: linesError } = await supabase
+        .schema("customer_portal")
+        .from("invoice_lines")
+        .select("*")
+        .eq("invoice_id", invoiceId)
+        .order("line_number", { ascending: true });
+
+      if (linesError) throw linesError;
+
+      // Get unique product IDs and tenant IDs
+      const productIds = Array.from(
+        new Set(linesData.map((line) => line.product_id).filter(Boolean))
+      );
+      const tenantIds = Array.from(
+        new Set(linesData.map((line) => line.tenant_id).filter(Boolean))
+      );
+
+      // Fetch products from shared schema
+      const { data: productsData, error: productsError } =
+        productIds.length > 0
+          ? await supabase
+              .schema("shared")
+              .from("products")
+              .select(
+                "product_id, product_name, plan_name, monthly_price, annual_price, currency"
+              )
+              .in("product_id", productIds)
+          : { data: [], error: null };
+
+      if (productsError) throw productsError;
+
+      // Fetch tenants from shared schema
+      const { data: tenantsData, error: tenantsError } =
+        tenantIds.length > 0
+          ? await supabase
+              .schema("shared")
+              .from("tenants")
+              .select("id, name, domain")
+              .in("id", tenantIds)
+          : { data: [], error: null };
+
+      if (tenantsError) throw tenantsError;
+
+      // Combine the data
+      const combinedLines = linesData.map((line) => ({
+        ...line,
+        product: productsData?.find((p) => p.product_id === line.product_id),
+        tenant: tenantsData?.find((t) => t.id === line.tenant_id),
+      }));
+
+      setInvoiceLines(prev => ({ ...prev, [invoiceId]: combinedLines }));
+    } catch (err) {
+      console.error(`Error fetching lines for invoice ${invoiceId}:`, err);
+    } finally {
+      setLoadingLines(prev => ({ ...prev, [invoiceId]: false }));
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6 flex items-center justify-center">
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-8 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-            <h3 className="text-lg font-semibold text-slate-700 mb-2">Loading Billing History</h3>
-            <p className="text-slate-500">Fetching invoice data from database...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const toggleRowExpansion = (invoiceId: string) => {
+    setExpandedRows(prev => {
+      const newState = { ...prev, [invoiceId]: !prev[invoiceId] };
+      if (newState[invoiceId]) {
+        fetchInvoiceLines(invoiceId);
+      }
+      return newState;
+    });
+  };
+
+  const filteredInvoices = invoices.filter((invoice) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      invoice.invoice_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (invoice.account_id &&
+        invoice.account_id.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    return matchesSearch;
+  });
+
+  const getStatusBadge = (status: string | null) => {
+    if (!status) return <Badge variant="outline">Unknown</Badge>;
+
+    switch (status.toLowerCase()) {
+      case "paid":
+        return <Badge className="bg-green-100 text-green-800">Paid</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case "overdue":
+        return <Badge className="bg-red-100 text-red-800">Overdue</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Cancelled</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-              Billing History
-            </h1>
-            <p className="text-slate-600 mt-2">View and manage your complete billing history</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={handleRefresh} disabled={loading} className="flex items-center gap-2">
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle>Billing History</CardTitle>
+          <CardDescription>
+            View and manage all your invoices and payment history
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+              <Input
+                placeholder="Search by invoice or account ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full md:w-64"
+              />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={fetchInvoices} disabled={loading}>
+              {loading ? "Refreshing..." : "Refresh Data"}
             </Button>
           </div>
-        </div>
 
-        {/* Statistics Section */}
-        <BillingStats
-          totalPaid={totalPaid}
-          totalInvoices={totalInvoices}
-          nextPayment={nextPayment}
-          currency={primaryCurrency}
-        />
-
-        {/* Filters Section */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl">Filter & Search</CardTitle>
-            <CardDescription>Find specific invoices and billing records</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    placeholder="Search by company name or invoice ID..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="w-full md:w-48">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="overdue">Overdue</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {error && (
+            <div className="bg-red-50 text-red-800 p-4 rounded-md mb-6">
+              Error: {error}
             </div>
-          </CardContent>
-        </Card>
+          )}
 
-        {/* Invoice Headers Table */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl">Invoice Headers ({filteredInvoices.length})</CardTitle>
-            <CardDescription>Click on an invoice to view line items</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {filteredInvoices.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice ID</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Billing Cycle</TableHead>
-                    <TableHead>Period</TableHead>
-                    <TableHead>Total Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredInvoices.map((invoice) => (
-                    <TableRow key={invoice.invoice_id}>
-                      <TableCell className="font-medium">{invoice.invoice_id.substring(0, 12)}...</TableCell>
-                      <TableCell>{invoice.account?.company_name || 'N/A'}</TableCell>
+          <div className="rounded-md border">
+            <Table>
+              <TableCaption>
+                {filteredInvoices.length === 0
+                  ? "No invoices found"
+                  : `Showing ${filteredInvoices.length} invoices`}
+              </TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead>Invoice ID</TableHead>
+                  <TableHead>Billing Cycle</TableHead>
+                  <TableHead>Period</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Subtotal</TableHead>
+                  <TableHead className="text-right">Discount</TableHead>
+                  <TableHead className="text-right">Tax</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInvoices.map((invoice) => (
+                  // Use React.Fragment with a unique key for the entire invoice row group
+                  <React.Fragment key={invoice.invoice_id}>
+                    <TableRow
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => toggleRowExpansion(invoice.invoice_id)}
+                    >
                       <TableCell>
-                        <Badge variant="secondary" className={getBillingCycleColor(invoice.billing_cycle)}>
-                          {invoice.billing_cycle || 'N/A'}
-                        </Badge>
+                        {expandedRows[invoice.invoice_id] ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
                       </TableCell>
+                      <TableCell className="font-medium">
+                        {invoice.invoice_id.substring(0, 8)}...
+                      </TableCell>
+                      <TableCell>{invoice.billing_cycle || "N/A"}</TableCell>
                       <TableCell>
                         {invoice.start_date && invoice.end_date
-                          ? `${new Date(invoice.start_date).toLocaleDateString()} - ${new Date(invoice.end_date).toLocaleDateString()}`
-                          : 'N/A'}
+                          ? `${formatDate(invoice.start_date)} - ${formatDate(invoice.end_date)}`
+                          : "N/A"}
                       </TableCell>
-                      <TableCell className="font-semibold">{invoice.currency} {invoice.total_amount?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(invoice.status)}>
-                          {invoice.status?.charAt(0).toUpperCase() + invoice.status?.slice(1)}
-                        </Badge>
+                      <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          invoice.subtotal_amount,
+                          invoice.currency || "USD"
+                        )}
                       </TableCell>
-                      <TableCell>
-                        {new Date(invoice.created_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          invoice.discount_amount,
+                          invoice.currency || "USD"
+                        )}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="hover:bg-blue-50"
-                            onClick={() => handleViewInvoice(invoice)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="hover:bg-emerald-50"
-                            onClick={() => downloadInvoice(invoice)}
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                        </div>
+                      <TableCell className="text-right">
+                        {formatCurrency(
+                          invoice.tax_amount,
+                          invoice.currency || "USD"
+                        )}
                       </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(
+                          invoice.total_amount,
+                          invoice.currency || "USD"
+                        )}
+                      </TableCell>
+                      <TableCell>{formatDate(invoice.created_at)}</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-12">
-                <FileText className="w-12 h-12 mx-auto text-slate-400 mb-4" />
-                <h3 className="text-lg font-semibold text-slate-600 mb-2">No invoices found</h3>
-                <p className="text-slate-500">
-                  {searchTerm || statusFilter !== "all" ? "Try adjusting your search criteria or filters" : "You don't have any invoices yet"}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Invoice Lines Table (remains the same) */}
-        {selectedInvoiceId && (
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl">Invoice Line Items - {selectedInvoiceId.substring(0, 12)}...</CardTitle>
-              <CardDescription>Detailed breakdown of services and products for this invoice</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {getInvoiceLines(selectedInvoiceId).length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Line #</TableHead>
-                      <TableHead>Product/Service</TableHead>
-                      <TableHead>Tenant</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Subtotal</TableHead>
-                      <TableHead>Discount</TableHead>
-                      <TableHead>Tax</TableHead>
-                      <TableHead>Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getInvoiceLines(selectedInvoiceId).map((line) => (
-                      <TableRow key={line.invoice_line_id}>
-                        <TableCell>{line.line_number || 'N/A'}</TableCell>
-                        <TableCell className="font-medium">{line.product_name || 'N/A'}</TableCell>
-                        <TableCell>{line.tenant_name || 'N/A'}</TableCell>
-                        <TableCell>{line.quantity || 0}</TableCell>
-                        <TableCell>{line.currency} {line.line_subtotal?.toFixed(2) || '0.00'}</TableCell>
-                        <TableCell>{line.currency} {line.line_discount?.toFixed(2) || '0.00'}</TableCell>
-                        <TableCell>{line.currency} {line.line_tax?.toFixed(2) || '0.00'}</TableCell>
-                        <TableCell className="font-semibold">{line.currency} {line.line_total?.toFixed(2) || '0.00'}</TableCell>
+                    {expandedRows[invoice.invoice_id] && (
+                      <TableRow key={`${invoice.invoice_id}-expanded`}>
+                        <TableCell colSpan={10} className="p-0">
+                          <div className="p-4 bg-muted/20">
+                            <h4 className="font-medium mb-3">Invoice Lines</h4>
+                            {loadingLines[invoice.invoice_id] ? (
+                              <div className="flex justify-center py-4">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                              </div>
+                            ) : invoiceLines[invoice.invoice_id]?.length ? (
+                              <div className="rounded-md border">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead className="w-[50px]">#</TableHead>
+                                      <TableHead>Product</TableHead>
+                                      <TableHead>Tenant</TableHead>
+                                      <TableHead className="text-right">Quantity</TableHead>
+                                      <TableHead className="text-right">Unit Price</TableHead>
+                                      <TableHead className="text-right">Discount</TableHead>
+                                      <TableHead className="text-right">Tax</TableHead>
+                                      <TableHead className="text-right">Total</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {invoiceLines[invoice.invoice_id].map((line) => (
+                                      <TableRow key={line.invoice_line_id}>
+                                        <TableCell className="font-medium">
+                                          {line.line_number || "-"}
+                                        </TableCell>
+                                        <TableCell>
+                                          <div className="flex items-center">
+                                            <Package className="h-4 w-4 mr-2 text-muted-foreground" />
+                                            <div>
+                                              <p className="font-medium">
+                                                {line.product?.product_name || "Unknown Product"}
+                                              </p>
+                                              <p className="text-sm text-muted-foreground">
+                                                {line.product?.plan_name || "N/A"}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell>
+                                          <div className="flex items-center">
+                                            <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+                                            <div>
+                                              <p className="font-medium">
+                                                {line.tenant?.name || "Unknown Tenant"}
+                                              </p>
+                                              <p className="text-sm text-muted-foreground">
+                                                {line.tenant?.domain || "N/A"}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {line.quantity || 0}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {formatCurrency(
+                                            line.product?.monthly_price || 0,
+                                            line.currency || "USD"
+                                          )}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {formatCurrency(
+                                            line.line_discount || 0,
+                                            line.currency || "USD"
+                                          )}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {formatCurrency(
+                                            line.line_tax || 0,
+                                            line.currency || "USD"
+                                          )}
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
+                                          {formatCurrency(
+                                            line.line_total || 0,
+                                            line.currency || "USD"
+                                          )}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            ) : (
+                              <div className="text-center py-4">
+                                <p className="text-muted-foreground">No invoice lines found</p>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-8 text-slate-500">
-                  No line items found for this invoice.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                    )}
+                  </React.Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-        {/* Summary Footer */}
-        {filteredInvoices.length > 0 && (
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-slate-50 to-blue-50">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="text-center md:text-left">
-                  <p className="text-sm text-slate-600">
-                    Showing {filteredInvoices.length} of {invoices.length} invoices
-                  </p>
-                </div>
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="text-center">
-                    <p className="font-semibold text-green-600">
-                      {primaryCurrency} {filteredInvoices.filter(inv => inv.status?.toLowerCase() === 'paid').reduce((sum, inv) => sum + (inv.total_amount || 0), 0).toFixed(2)}
-                    </p>
-                    <p className="text-slate-500">Paid</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold text-yellow-600">
-                      {primaryCurrency} {filteredInvoices.filter(inv => inv.status?.toLowerCase() === 'pending').reduce((sum, inv) => sum + (inv.total_amount || 0), 0).toFixed(2)}
-                    </p>
-                    <p className="text-slate-500">Pending</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold text-red-600">
-                      {primaryCurrency} {filteredInvoices.filter(inv => inv.status?.toLowerCase() === 'overdue').reduce((sum, inv) => sum + (inv.total_amount || 0), 0).toFixed(2)}
-                    </p>
-                    <p className="text-slate-500">Overdue</p>
-                  </div>
-                </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between space-x-2 py-4">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* The Dialog Component */}
-        {currentInvoice && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="max-w-4xl p-0 overflow-hidden">
-              <div id="invoice-bill-pdf-target" className="p-8 bg-white print:p-0">
-                <DialogHeader className="mb-6">
-                  <DialogTitle className="text-3xl font-bold text-gray-800">Invoice</DialogTitle>
-                  <DialogDescription className="text-gray-500">
-                    Invoice ID: {currentInvoice.invoice_id}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex justify-between items-start mb-8 text-sm text-gray-600">
-                  <div>
-                    <p className="font-semibold text-gray-800">Billed to:</p>
-                    <p>{currentInvoice.account?.company_name || "N/A"}</p>
-                  </div>
-                  <div className="text-right">
-                    <p><span className="font-semibold">Date:</span> {new Date(currentInvoice.created_at).toLocaleDateString()}</p>
-                    <p><span className="font-semibold">Status:</span> {currentInvoice.status}</p>
-                    <p><span className="font-semibold">Period:</span> {new Date(currentInvoice.start_date!).toLocaleDateString()} - {new Date(currentInvoice.end_date!).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product/Service</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead className="text-right">Unit Price</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getInvoiceLines(currentInvoice.invoice_id).map((line) => (
-                      <TableRow key={line.invoice_line_id}>
-                        <TableCell>{line.product_name || line.tenant_name || 'N/A'}</TableCell>
-                        <TableCell>{line.quantity}</TableCell>
-                        <TableCell className="text-right">{currentInvoice.currency} {((line.line_total || 0) / (line.quantity || 1)).toFixed(2)}</TableCell>
-                        <TableCell className="text-right">{currentInvoice.currency} {line.line_total?.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="flex justify-end mt-8">
-                  <div className="w-full max-w-sm space-y-2">
-                    <div className="flex justify-between text-gray-700">
-                      <span>Subtotal:</span>
-                      <span>{currentInvoice.currency} {currentInvoice.subtotal_amount?.toFixed(2) || '0.00'}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-700">
-                      <span>Tax ({((currentInvoice.tax_amount! / currentInvoice.subtotal_amount!) * 100).toFixed(2) || "0.00"}%):</span>
-                      <span>{currentInvoice.currency} {currentInvoice.tax_amount?.toFixed(2) || '0.00'}</span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold text-gray-800 border-t pt-4 mt-4">
-                      <span>TOTAL:</span>
-                      <span>{currentInvoice.currency} {currentInvoice.total_amount?.toFixed(2) || '0.00'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 p-4 border-t flex justify-end">
-                <Button onClick={() => downloadInvoice(currentInvoice)} className="flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  Download PDF
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  Next
                 </Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
