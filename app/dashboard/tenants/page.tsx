@@ -105,6 +105,7 @@ export default function BillingHistoryPage() {
     }
     console.log("user id:" + user?.id);
   };
+
   
   // Calculate statistics
   const totalTenants = tenants.length;
