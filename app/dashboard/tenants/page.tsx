@@ -106,6 +106,7 @@ export default function BillingHistoryPage() {
     console.log("user id:" + user?.id);
   };
 
+  
   // Calculate statistics
   const totalTenants = tenants.length;
   const activeTenants = tenants.filter((t) => t.status === "active").length;
