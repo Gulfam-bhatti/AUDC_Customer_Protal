@@ -60,7 +60,7 @@ function CustomNavbar() {
     } else {
       toast.success("Logged out successfully");
       setFindUser(null); // UI update
-      window.location.href = "https://audc-customer-protal.vercel.app/login";
+      window.location.href = "https://audc-branding-website.vercel.app/login";
     }
   };
 
@@ -113,7 +113,7 @@ function CustomNavbar() {
               className="mt-4"
               color="primary"
               onClick={() =>
-                (window.location.href = "https://audc-customer-protal.vercel.app/login")
+                (window.location.href = "https://audc-branding-website.vercel.app/login")
               }
             >
               Login
