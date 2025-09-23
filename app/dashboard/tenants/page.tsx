@@ -101,15 +101,15 @@ export default function BillingHistoryPage() {
       setUser(user);
     }
     if (!user) {
-      window.location.href = "https://audc-branding-website.vercel.app/login";
+      window.location.href = "http://localhost:3000/login";
     }
     console.log("user id:" + user?.id);
   };
 
   // Calculate statistics
   const totalTenants = tenants.length;
-  const activeTenants = tenants.filter((t) => t.is_active).length;
-  const inactiveTenants = totalTenants - activeTenants;
+  const activeTenants = tenants.filter((t) => t.status === "active").length;
+  const inactiveTenants = tenants.filter((t) => t.status === "inactive").length;
 
   if (loading) {
     return (

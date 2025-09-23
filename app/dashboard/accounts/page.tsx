@@ -41,7 +41,7 @@ export default function AccountViewPage() {
       const { data: userData, error: userError } =
         await supabase.auth.getUser();
       if (userError || !userData.user) {
-        window.location.href = "https://audc-branding-website.vercel.app/app/onboard/welcome";
+        window.location.href = "http://localhost:3000/app/onboard/welcome";
         return;
       }
 
@@ -58,7 +58,7 @@ export default function AccountViewPage() {
         .maybeSingle();
 
       if (error || !data) {
-        window.location.href = "https://audc-branding-website.vercel.app/app/onboard/welcome";
+        window.location.href = "http://localhost:3000/app/onboard/welcome";
       } else {
         setAccount(data as FormData);
       }

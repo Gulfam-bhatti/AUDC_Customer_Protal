@@ -447,7 +447,7 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen max-w-full w-full bg-background">
       {/* Header Section */}
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="font-space-grotesk text-4xl md:text-6xl font-bold text-foreground mb-6">

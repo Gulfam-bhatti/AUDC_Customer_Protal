@@ -235,7 +235,7 @@ export default function AddTenantPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 p-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-8 p-6 max-w-5xl mx-auto">
       <div className="space-y-3 text-center">
         <div className="flex items-center justify-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-600">

@@ -1,4 +1,3 @@
-// app/invoices/[params.invoice_id]/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -198,7 +197,7 @@ export default function InvoiceDetailsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-red-500">{error || "Invoice not found"}</p>
-            <Button className="mt-4" onClick={() => router.push("/invoices")}>
+            <Button className="mt-4" onClick={() => router.push("/dashboard/invoice-headers")}>
               Back to Invoices
             </Button>
           </CardContent>
@@ -208,11 +207,11 @@ export default function InvoiceDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container max-w-full mx-auto py-10">
       <div className="mb-6">
         <Button
           variant="outline"
-          onClick={() => router.push("/invoices")}
+          onClick={() => router.push("/dashboard/invoice-headers")}
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

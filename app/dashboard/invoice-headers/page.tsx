@@ -120,7 +120,7 @@ export default function InvoicesPage() {
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container max-w-full w-full mx-auto py-10">
       <Card>
         <CardHeader>
           <CardTitle>Invoice Headers</CardTitle>

@@ -176,7 +176,7 @@ const App = () => {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-950 flex min-h-screen items-center justify-center p-4 sm:p-6 lg:p-8">
-      <Card className="w-full max-w-5xl rounded-xl shadow-lg dark:shadow-2xl">
+      <Card className="w-full max-w-full rounded-xl shadow-lg dark:shadow-2xl">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
             Billing Account Management

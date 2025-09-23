@@ -106,7 +106,7 @@ export default function AllTenantsAnalytics() {
 
     const tenantStats: TenantStats = {
       totalTenants: tenants.length,
-      activeTenants: tenants.filter((t) => t.is_active).length,
+      activeTenants: tenants.filter((t) => t.status === "active").length,
       inactiveTenants: tenants.filter((t) => !t.is_active).length,
       tenantsWithDomain: tenants.filter((t) => t.domain).length,
       tenantsWithSchema: tenants.filter((t) => t.schema_created).length,
@@ -302,7 +302,7 @@ export default function AllTenantsAnalytics() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
