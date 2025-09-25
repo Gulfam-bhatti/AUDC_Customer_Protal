@@ -17,6 +17,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import type { User } from "@supabase/supabase-js";
+import { BASE_URL } from "@/config/constants";
 
 function CustomNavbar() {
   const router = useRouter();
@@ -60,7 +61,7 @@ function CustomNavbar() {
     } else {
       toast.success("Logged out successfully");
       setFindUser(null); // UI update
-      window.location.href = "https://audc-branding-website.vercel.app/login";
+      window.location.href = `${BASE_URL}/login`;
     }
   };
 
@@ -113,7 +114,8 @@ function CustomNavbar() {
               className="mt-4"
               color="primary"
               onClick={() =>
-                (window.location.href = "https://audc-branding-website.vercel.app/login")
+                (window.location.href =
+                  "BASE_URL/login")
               }
             >
               Login

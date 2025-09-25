@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BASE_URL } from "@/config/constants";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { Download, Eye, Users, CheckCircle, XCircle } from "lucide-react";
@@ -101,7 +102,7 @@ export default function BillingHistoryPage() {
       setUser(user);
     }
     if (!user) {
-      window.location.href = "https://audc-branding-website.vercel.app/login";
+      window.location.href = `${BASE_URL}/login`;
     }
     console.log("user id:" + user?.id);
   };

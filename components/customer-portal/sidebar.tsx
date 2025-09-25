@@ -19,6 +19,7 @@ import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import { Button } from "../ui/button";
+import { BASE_URL } from "@/config/constants";
 
 interface SidebarDemoProps {
   open?: boolean;
@@ -77,7 +78,7 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
   // Logout function
   const handleLogOut = async () => {
     await supabase.auth.signOut();
-    window.location.href = "https://audc-branding-website.vercel.app/login";
+    window.location.href = `${BASE_URL}/login`;
   };
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export function SidebarDemo({ open, setOpen }: SidebarDemoProps) {
       setUser(user);
     }
     if (!user) {
-      window.location.href = "https://audc-branding-website.vercel.app/login";
+      window.location.href = "BASE_URL/login";
     }
     console.log("user id:" + user?.id);
   };

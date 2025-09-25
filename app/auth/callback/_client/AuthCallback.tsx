@@ -4,10 +4,11 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { Loader } from "lucide-react";
 
 export default function AuthCallback() {
   const searchParams = useSearchParams();
-  
+
   const access_token = searchParams.get("access_token");
   const refresh_token = searchParams.get("refresh_token");
 
@@ -31,5 +32,9 @@ export default function AuthCallback() {
     setSession();
   }, [access_token, refresh_token]);
 
-  return <p className="p-6">Logging you in, please wait...</p>;
+  return (
+    <p className="p-6 flex gap-2">
+      <Loader className="animate-spin" /> Logging you in, please wait...
+    </p>
+  );
 }

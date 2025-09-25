@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Building2, User, CreditCard, Settings } from "lucide-react";
+import { BASE_URL } from "@/config/constants";
 
 interface FormData {
   company_name: string;
@@ -41,7 +42,7 @@ export default function AccountViewPage() {
       const { data: userData, error: userError } =
         await supabase.auth.getUser();
       if (userError || !userData.user) {
-        window.location.href = "https://audc-branding-website.vercel.app/app/onboard/welcome";
+        window.location.href = `${BASE_URL}/app/onboard/welcome`;
         return;
       }
 
@@ -58,7 +59,7 @@ export default function AccountViewPage() {
         .maybeSingle();
 
       if (error || !data) {
-        window.location.href = "https://audc-branding-website.vercel.app/app/onboard/welcome";
+        window.location.href = `${BASE_URL}/app/onboard/welcome`;
       } else {
         setAccount(data as FormData);
       }
