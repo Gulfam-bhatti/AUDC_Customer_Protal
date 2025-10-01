@@ -1,42 +1,25 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-  Input,
-  Textarea,
-  Chip,
-  Button,
-  Select,
-  SelectItem,
-} from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import { Icon } from "@iconify/react";
-import { TenantFormData } from "@/types/customer-portal";
+import { TenantFormData, Server, Product } from "@/types/customer-portal";
 import { supabase } from "@/lib/supabase";
+import { TenantInfoStep } from "@/components/customer-portal/tenants/TenantInfoStep";
+import { ServerSelectionStep } from "@/components/customer-portal/tenants/ServerSelectionStep";
+import { ProductSelectionStep } from "@/components/customer-portal/tenants/ProductSelectionStep";
+import toast from "react-hot-toast";
+import { createTenantApi, fetchProductsHelper } from "@/lib/api/helper";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useRemoveSearchParam } from "@/hooks/useRemoveSearchParams";
+import DynamicConfigForm from "@/components/customer-portal/tenants/ProductConfigurationStep";
+import RowSteps from "@/components/TenantRowStep";
 
-interface Server {
-  id: string;
-  name: string;
-  description: string | null;
-  provider: string;
-  status: string;
-  domain: string;
-  region: string | null;
-  no_of_cpu_cores: number | null;
-  ram: number;
-  storage_capacity: number;
-}
+export default function AddTenantPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [products, setProducts] = useState<Product[]>([]);
 
-interface Product {
-  product_id: string;
-  product_name: string;
-  plan_name: string;
-  max_users: number;
-  monthly_price: number;
-  annual_price: number;
-  currency: string;
-  is_active: boolean;
-}
-
-export default function AddTenantPage() {
+  const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<Partial<TenantFormData>>({});
   const [errors, setErrors] = useState<
     Partial<Record<keyof TenantFormData, string>>
@@ -45,28 +28,98 @@ export default function AddTenantPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [servers, setServers] = useState<Server[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [loadingServers, setLoadingServers] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [selectedServerId, setSelectedServerId] = useState<string>("");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
 
-  const availableFeatures = [
-    "Home",
-    "Members",
-    "Events",
-    "Committees",
-    "Profile",
-    "Notifications",
-    "App Settings",
-    "Support",
-    "Families",
-  ];
+  // Product configuration data
+  const [productConfigData, setProductConfigData] = useState<
+    Record<string, any>
+  >({});
 
-  // Fetch servers and products on component mount
+  // ---- LIFTED validation states (new) ----
+  const [accessCodeValid, setAccessCodeValid] = useState<boolean | null>(null);
+  const [domainValid, setDomainValid] = useState<boolean | null>(null);
+  const [validatingAccessCode, setValidatingAccessCode] = useState(false);
+  const [validatingDomain, setValidatingDomain] = useState(false);
+  // ----------------------------------------
+  const removeParam = useRemoveSearchParam();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+
+        const products = await fetchProductsHelper();
+        console.log("products:", products);
+
+        if (products) {
+          const productList = products;
+          setProducts(productList || []);
+        }
+      } catch (err: any) {
+        console.error("Error fetching products:", err);
+        setProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const removeParamsOnReload = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("product_id");
+      window.history.replaceState({}, "", url.toString());
+    };
+
+    removeParamsOnReload();
+  }, []);
+
+  useEffect(() => {
+    if (submitSuccess) {
+      const timer = setTimeout(() => {
+        setSubmitSuccess(false);
+        router.push("/dashboard/tenants");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [submitSuccess, router]);
+
+  useEffect(() => {
+    if (submitError) {
+      const timer = setTimeout(() => {
+        setSubmitError(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [submitError]);
+
+  const getSteps = () => {
+    const steps = [
+      { title: "Tenant Information" },
+      { title: "Server Selection" },
+      { title: "Product Selection" },
+      { title: "Product Configuration" },
+    ];
+
+    return steps;
+  };
+
+  const steps = getSteps();
+
+  const isFormEmpty =
+    !data.access_code ||
+    !data.subdomain ||
+    !data.name ||
+    !data.business_reg_number ||
+    !data.time_zone;
+
   useEffect(() => {
     fetchServers();
-    fetchProducts();
   }, []);
 
   const fetchServers = async () => {
@@ -90,152 +143,219 @@ export default function AddTenantPage() {
     }
   };
 
-  const fetchProducts = async () => {
-    try {
-      const { data: productsData, error } = await supabase
-        .schema("shared")
-        .from("products")
-        .select(
-          "product_id, product_name, plan_name, max_users, monthly_price, annual_price, currency, is_active"
-        )
-        .eq("is_active", true)
-        .order("plan_name");
-
-      if (error) throw error;
-      setProducts(productsData || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setSubmitError("Failed to load products");
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
-
   const onChange = (key: keyof TenantFormData, value: string | string[]) => {
     setData((prevData) => ({
       ...prevData,
       [key]: value,
     }));
-    // Clear error when user starts typing
     if (errors[key]) {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
     }
   };
 
-  const handleFeatureToggle = (feature: string) => {
-    const currentFeatures = data.enabled_features || [];
-    if (currentFeatures.includes(feature)) {
-      onChange(
-        "enabled_features",
-        currentFeatures.filter((f) => f !== feature)
-      );
-    } else {
-      onChange("enabled_features", [...currentFeatures, feature]);
-    }
-  };
-
   const validateForm = () => {
+    let valid = true;
     const newErrors: Partial<Record<keyof TenantFormData, string>> = {};
 
-    if (!data.entity_full_name?.trim()) {
-      newErrors.entity_full_name = "Full name is required";
-    }
-    if (!data.entity_short_name?.trim()) {
-      newErrors.entity_short_name = "Short name is required";
-    }
-    if (!data.abn?.trim()) {
-      newErrors.abn = "ABN is required";
-    }
-    if (!data.domain_url?.trim()) {
-      newErrors.domain_url = "Domain URL is required";
-    }
-    if (!data.entity_email?.trim()) {
-      newErrors.entity_email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(data.entity_email)) {
-      newErrors.entity_email = "Invalid email format";
-    }
-    if (!data.entity_purpose?.trim()) {
-      newErrors.entity_purpose = "Purpose is required";
-    }
-    if (!data.entity_mission?.trim()) {
-      newErrors.entity_mission = "Mission is required";
-    }
-    if (!data.entity_description?.trim()) {
-      newErrors.entity_description = "Description is required";
-    }
-    if (!selectedServerId) {
-      setSubmitError("Please select a server");
-      return false;
-    }
-    if (!selectedProductId) {
-      setSubmitError("Please select a product plan");
-      return false;
+    // Validate based on current step
+    if (currentStep === 0) {
+      if (!data.name?.trim()) {
+        newErrors.name = "Tenant name is required";
+      }
+      if (!data.access_code?.trim()) {
+        newErrors.access_code = "Access code is required";
+      }
+      if (!data.subdomain?.trim()) {
+        newErrors.subdomain = "Domain is required";
+      }
+      if (!data.time_zone?.trim()) {
+        newErrors.time_zone = "Time zone is required";
+      }
+      if (!data.business_reg_number?.trim()) {
+        newErrors.business_reg_number =
+          "Business registration number is required";
+      }
+
+      // If async validation is still running, block proceeding
+      if (validatingAccessCode || validatingDomain) {
+        return false;
+      }
+
+      // backend validation results (lifted from TenantInfoStep)
+      if (accessCodeValid === false) {
+        newErrors.access_code =
+          newErrors.access_code || "Access code is not valid";
+        valid = false;
+      }
+      if (domainValid === false) {
+        newErrors.subdomain = newErrors.subdomain || "Domain is not valid";
+        valid = false;
+      }
+    } else if (currentStep === 1) {
+      if (!selectedServerId) {
+        setSubmitError("Please select a server");
+        return false;
+      }
+    } else if (currentStep === 2) {
+      if (!selectedProductId) {
+        setSubmitError("Please select a product");
+        return false;
+      }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return valid && Object.keys(newErrors).length === 0;
   };
 
-  const generateAccessCode = () => {
-    return (
-      Math.random().toString(36).substring(2, 10) +
-      Math.random().toString(36).substring(2, 10)
-    );
+  const handleNext = () => {
+    const isValid = validateForm(); // sets errors + returns true/false
+
+    if (!isValid || validatingAccessCode || validatingDomain) {
+      return;
+    }
+
+    if (currentStep < 3) {
+      removeParam("product_id");
+    }
+
+    // Example: Add product_id into search params on step 2
+    if (currentStep === 2 && selectedProductId) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("product_id", selectedProductId);
+
+      // Push same route but with updated query params (no reload)
+      router.push(`?${params.toString()}`);
+    }
+
+    // If we're at the last step, submit the form
+    if (currentStep === steps.length - 1) {
+      handleSubmit(new Event("submit") as any);
+    } else {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep((prev) => prev - 1);
+
+    if (currentStep < 3) {
+      removeParam("product_id");
+    }
+
+    if (currentStep === 3 && selectedProductId) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("product_id", selectedProductId);
+
+      router.push(`?${params.toString()}`);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const tenantData = {
+      name: data.name,
+      access_code: data.access_code,
+      server_id: selectedServerId,
+      product_id: selectedProductId,
+      subdomain: data.subdomain,
+      business_reg_number: data.business_reg_number,
+      time_zone: data.time_zone || "UTC",
+      config: productConfigData,
+      status: "active",
+    };
+    console.log("Print all Tenant data: ", tenantData);
+
     if (!validateForm()) {
+      toast.error("Please fix the errors in the form");
       return;
     }
 
-    setIsSubmitting(true);
-    setSubmitError(null);
-
     try {
-      const accessCode = generateAccessCode();
+      setIsSubmitting(true);
 
-      // Insert only the columns that exist in the tenants table
-      const tenantData = {
-        name: data.entity_full_name,
-        access_code: accessCode,
-        server_id: selectedServerId,
-        product_id: selectedProductId,
-        domain: data.domain_url,
-        business_reg_number: data.abn,
-        time_zone: data.time_zone || "UTC",
-        // settings_id: null, // You can set this if you have a separate settings table
-        // schema: null, // You can set this if you want to specify a schema
-        // status: 'active', // This defaults to 'active' in the table
-        // logo: null, // You can add logo upload functionality later
-      };
+      const response = await createTenantApi(tenantData);
 
-      // Insert tenant into Supabase
-      const { data: insertedData, error } = await supabase
-        .schema("shared")
-        .from("tenants")
-        .insert([tenantData])
-        .select();
-
-      if (error) {
-        throw error;
+      // Check if response indicates success
+      if (response && response.success) {
+        setSubmitSuccess(true);
+        setData({});
+        setSelectedServerId("");
+        setSelectedProductId("");
+        setProductConfigData({});
+        toast.success("Tenant created successfully!");
+      } else {
+        setSubmitError(response?.message || "Failed to create tenant");
+        toast.error("Failed to create tenant");
       }
-
-      setSubmitSuccess(true);
-      setData({}); // Reset form
-      setSelectedServerId("");
-      setSelectedProductId("");
     } catch (error: any) {
       console.error("Error creating tenant:", error);
       setSubmitError(error.message || "Failed to create tenant");
+      toast.error("Failed to create tenant");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <TenantInfoStep
+            data={data}
+            errors={errors}
+            onChange={onChange}
+            onValidationChange={(payload) => {
+              // payload may contain any subset so guard each
+              if (payload.accessCodeValid !== undefined)
+                setAccessCodeValid(payload.accessCodeValid);
+              if (payload.domainValid !== undefined)
+                setDomainValid(payload.domainValid);
+              if (payload.validatingAccessCode !== undefined)
+                setValidatingAccessCode(payload.validatingAccessCode);
+              if (payload.validatingDomain !== undefined)
+                setValidatingDomain(payload.validatingDomain);
+            }}
+          />
+        );
+      case 1:
+        return (
+          <ServerSelectionStep
+            servers={servers}
+            selectedServerId={selectedServerId}
+            setSelectedServerId={setSelectedServerId}
+            loadingServers={loadingServers}
+            setSubmitError={setSubmitError}
+          />
+        );
+      case 2:
+        return (
+          <ProductSelectionStep
+            products={products}
+            selectedProductId={selectedProductId}
+            setSelectedProductId={setSelectedProductId}
+            loadingProducts={loadingProducts}
+            setSubmitError={setSubmitError}
+            onNextStep={handleNext}
+          />
+        );
+      case 3:
+        return (
+          <DynamicConfigForm
+            productId={selectedProductId}
+            configData={productConfigData}
+            setConfigData={setProductConfigData}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-8 p-6 max-w-5xl mx-auto">
+    <div className="flex flex-col gap-8 p-6 max-w-6xl mx-auto">
       <div className="space-y-3 text-center">
         <div className="flex items-center justify-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-600">
@@ -253,11 +373,58 @@ export default function AddTenantPage() {
         </p>
       </div>
 
+      <RowSteps
+        steps={steps}
+        currentStep={currentStep}
+        onStepChange={setCurrentStep}
+        disableFutureSteps
+      />
+
       {submitSuccess && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-          <div className="flex items-center">
-            <Icon icon="heroicons:check-circle" className="h-5 w-5 mr-2" />
-            <span>Tenant created successfully!</span>
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100 animate-in fade-in-90 zoom-in-90">
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
+                  <Icon
+                    icon="heroicons:check-circle"
+                    className="h-10 w-10 text-green-600"
+                  />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Tenant Created Successfully!
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Your new tenant{" "}
+                <span className="font-semibold">{data.name}</span> has been
+                created and is now active.
+              </p>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-500">Tenant Name:</span>
+                  <span className="font-medium">{data.name}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-500">Domain:</span>
+                  <span className="font-medium">{data.subdomain}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Status:</span>
+                  <span className="font-medium text-green-600">Active</span>
+                </div>
+              </div>
+              <Button
+                color="primary"
+                className="w-full"
+                onClick={() => {
+                  setSubmitSuccess(false);
+                  router.push("/dashboard/tenants");
+                }}
+              >
+                Go to Tenants Dashboard
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -271,470 +438,32 @@ export default function AddTenantPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        {/* Server and Product Selection Section */}
-        <div className="mb-8 space-y-6">
-          <h3 className="text-xl font-bold text-default-800 flex items-center gap-2">
-            <Icon
-              icon="heroicons:server"
-              className="h-6 w-6 text-default-600"
-            />
-            Server & Product Configuration
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label
-                className="text-sm font-medium text-default-700 flex items-center gap-2"
-                htmlFor="server-select"
-              >
-                <Icon className="h-4 w-4" icon="heroicons:server" />
-                Select Server
-              </label>
-              <Select
-                id="server-select"
-                placeholder="Choose a server"
-                isLoading={loadingServers}
-                isRequired
-                radius="lg"
-                size="lg"
-                variant="bordered"
-                selectedKeys={selectedServerId ? [selectedServerId] : []}
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-                  setSelectedServerId(selectedKey || "");
-                  setSubmitError(null);
-                }}
-              >
-                {servers.map((server) => (
-                  <SelectItem
-                    key={server.id}
-                    textValue={server.name}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{server.name}</span>
-                      <span className="text-xs text-default-500">
-                        {server.provider} • {server.region} • {server.ram}MB RAM
-                        • {server.storage_capacity}GB
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label
-                className="text-sm font-medium text-default-700 flex items-center gap-2"
-                htmlFor="product-select"
-              >
-                <Icon className="h-4 w-4" icon="heroicons:credit-card" />
-                Select Product Plan
-              </label>
-              <Select
-                id="product-select"
-                placeholder="Choose a product plan"
-                isLoading={loadingProducts}
-                isRequired
-                radius="lg"
-                size="lg"
-                variant="bordered"
-                selectedKeys={selectedProductId ? [selectedProductId] : []}
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-                  setSelectedProductId(selectedKey || "");
-                  setSubmitError(null);
-                }}
-              >
-                {products.map((product) => (
-                  <SelectItem
-                    key={product.product_id}
-                    textValue={product.plan_name}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{product.plan_name}</span>
-                      <span className="text-xs text-default-500">
-                        {product.max_users} users • {product.currency}{" "}
-                        {product.monthly_price}/month
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        <hr className="my-4 border-t border-default-200" />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Basic Information Section */}
-          <div className="space-y-2">
-            <label
-              htmlFor="entity_full_name"
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-            >
-              <Icon icon="heroicons:identification" className="h-4 w-4" />
-              Full Name
-            </label>
-            <Input
-              id="entity_full_name"
-              isRequired
-              errorMessage={errors.entity_full_name}
-              isInvalid={!!errors.entity_full_name}
-              placeholder="Enter your full organization name"
-              radius="lg"
-              size="lg"
-              type="text"
-              value={data.entity_full_name || ""}
-              variant="bordered"
-              onChange={(e) => onChange("entity_full_name", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="entity_short_name"
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-            >
-              <Icon icon="heroicons:hashtag" className="h-4 w-4" />
-              Short Name
-            </label>
-            <Input
-              id="entity_short_name"
-              isRequired
-              errorMessage={errors.entity_short_name}
-              isInvalid={!!errors.entity_short_name}
-              placeholder="Enter short name or acronym"
-              radius="lg"
-              size="lg"
-              type="text"
-              value={data.entity_short_name || ""}
-              variant="bordered"
-              onChange={(e) => onChange("entity_short_name", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="abn-input"
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-            >
-              <Icon icon="heroicons:key" className="h-4 w-4" />
-              ABN
-            </label>
-            <Input
-              id="abn-input"
-              isRequired
-              errorMessage={errors.abn}
-              isInvalid={!!errors.abn}
-              placeholder="Enter the ABN"
-              radius="lg"
-              size="lg"
-              type="text"
-              value={data.abn || ""}
-              variant="bordered"
-              onChange={(e) => onChange("abn", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-              htmlFor="domain-url-input"
-            >
-              <Icon className="h-4 w-4" icon="heroicons:link" />
-              Domain URL
-            </label>
-            <Input
-              isRequired
-              errorMessage={errors.domain_url}
-              id="domain-url-input"
-              isInvalid={!!errors.domain_url}
-              placeholder="Enter the domain URL"
-              radius="lg"
-              size="lg"
-              type="url"
-              value={data.domain_url || ""}
-              variant="bordered"
-              onChange={(e) => onChange("domain_url", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-              htmlFor="email-input"
-            >
-              <Icon className="h-4 w-4" icon="heroicons:envelope" />
-              Email Address
-            </label>
-            <Input
-              isRequired
-              errorMessage={errors.entity_email}
-              id="email-input"
-              isInvalid={!!errors.entity_email}
-              placeholder="contact@yourorganization.com"
-              radius="lg"
-              size="lg"
-              type="email"
-              value={data.entity_email || ""}
-              variant="bordered"
-              onChange={(e) => onChange("entity_email", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-              htmlFor="website-input"
-            >
-              <Icon className="h-4 w-4" icon="heroicons:globe-alt" />
-              Website URL
-            </label>
-            <Input
-              errorMessage={errors.entity_website_url}
-              id="website-input"
-              isInvalid={!!errors.entity_website_url}
-              placeholder="www.yourorganization.com"
-              radius="lg"
-              size="lg"
-              type="url"
-              value={data.entity_website_url || ""}
-              variant="bordered"
-              onChange={(e) => onChange("entity_website_url", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-              htmlFor="purpose-input"
-            >
-              <Icon className="h-4 w-4" icon="heroicons:target" />
-              Purpose
-            </label>
-            <Input
-              isRequired
-              errorMessage={errors.entity_purpose}
-              id="purpose-input"
-              isInvalid={!!errors.entity_purpose}
-              placeholder="What is your organization's main purpose?"
-              radius="lg"
-              size="lg"
-              type="text"
-              value={data.entity_purpose || ""}
-              variant="bordered"
-              onChange={(e) => onChange("entity_purpose", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-              htmlFor="mission-input"
-            >
-              <Icon className="h-4 w-4" icon="heroicons:rocket-launch" />
-              Mission
-            </label>
-            <Input
-              isRequired
-              errorMessage={errors.entity_mission}
-              id="mission-input"
-              isInvalid={!!errors.entity_mission}
-              placeholder="Describe your organization's mission"
-              radius="lg"
-              size="lg"
-              type="text"
-              value={data.entity_mission || ""}
-              variant="bordered"
-              onChange={(e) => onChange("entity_mission", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <hr className="my-4 border-t border-default-200" />
-
-        {/* Custom Terminology Section */}
-        <div className="flex flex-col gap-6">
-          <h3 className="text-xl font-bold text-default-800 flex items-center gap-2">
-            <Icon icon="heroicons:tag" className="h-6 w-6 text-default-600" />
-            Custom Terminology
-          </h3>
-          <p className="text-default-500 text-sm">
-            Customize how different roles and groups are referred to in your
-            organization.
-          </p>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <label
-                htmlFor="employees-term"
-                className="text-sm font-medium text-default-700 flex items-center gap-2"
-              >
-                <Icon icon="heroicons:users" className="h-4 w-4" />
-                Employees
-              </label>
-              <Input
-                id="employees-term"
-                errorMessage={errors.employees_term}
-                isInvalid={!!errors.employees_term}
-                placeholder="e.g., Volunteers"
-                radius="lg"
-                size="lg"
-                type="text"
-                value={data.employees_term || ""}
-                variant="bordered"
-                onChange={(e) => onChange("employees_term", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label
-                className="text-sm font-medium text-default-700 flex items-center gap-2"
-                htmlFor="members-term"
-              >
-                <Icon className="h-4 w-4" icon="heroicons:user-group" />
-                Members
-              </label>
-              <Input
-                errorMessage={errors.members_term}
-                id="members-term"
-                isInvalid={!!errors.members_term}
-                placeholder="e.g., Members"
-                radius="lg"
-                size="lg"
-                type="text"
-                value={data.members_term || ""}
-                variant="bordered"
-                onChange={(e) => onChange("members_term", e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-              htmlFor="groups-term"
-            >
-              <Icon className="h-4 w-4" icon="heroicons:folder" />
-              Groups
-            </label>
-            <Input
-              errorMessage={errors.groups_term}
-              id="groups-term"
-              isInvalid={!!errors.groups_term}
-              placeholder="e.g., Families"
-              radius="lg"
-              size="lg"
-              type="text"
-              value={data.groups_term || ""}
-              variant="bordered"
-              onChange={(e) => onChange("groups_term", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <hr className="my-4 border-t border-default-200" />
-
-        {/* Features Section */}
-        <div className="flex flex-col gap-6">
-          <h3 className="text-xl font-bold text-default-800 flex items-center gap-2">
-            <Icon
-              icon="heroicons:puzzle-piece"
-              className="h-6 w-6 text-default-600"
-            />
-            Features & Navigation
-          </h3>
-          <p className="text-default-500 text-sm">
-            Configure enabled features, labels, and display order
-          </p>
-          <div className="space-y-4">
-            <label
-              className="text-sm font-medium text-default-700 flex items-center gap-2"
-              htmlFor="features-select"
-            >
-              Select Features to Enable
-            </label>
-            <div className="flex flex-wrap gap-3" id="features-select">
-              {availableFeatures.map((feature) => (
-                <Chip
-                  key={feature}
-                  className="cursor-pointer transition-all duration-200 ease-in-out hover:scale-105"
-                  color={
-                    data.enabled_features?.includes(feature)
-                      ? "success"
-                      : "default"
-                  }
-                  startContent={
-                    data.enabled_features?.includes(feature) && (
-                      <Icon className="h-4 w-4" icon="heroicons:check" />
-                    )
-                  }
-                  variant="flat"
-                  onClick={() => handleFeatureToggle(feature)}
-                >
-                  {feature}
-                </Chip>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <hr className="my-4 border-t border-default-200" />
-
-        {/* Description Section */}
-        <div className="space-y-2">
-          <label
-            className="text-sm font-medium text-default-700 flex items-center gap-2"
-            htmlFor="org-description"
-          >
-            <Icon className="h-4 w-4" icon="heroicons:document-text" />
-            Organization Description
-          </label>
-          <Textarea
-            isRequired
-            errorMessage={errors.entity_description}
-            id="org-description"
-            isInvalid={!!errors.entity_description}
-            maxRows={8}
-            minRows={4}
-            placeholder="Provide a detailed description of your organization, its activities, and goals..."
-            radius="lg"
-            value={data.entity_description || ""}
-            variant="bordered"
-            onChange={(e) => onChange("entity_description", e.target.value)}
-          />
-          <div className="flex items-center justify-between text-xs text-default-500">
-            <div className="flex items-center gap-1">
-              <Icon icon="heroicons:information-circle" className="h-4 w-4" />
-              <span>Provide comprehensive details about your organization</span>
-            </div>
-            <span>{data.entity_description?.length || 0}/500</span>
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-end gap-3 pt-4">
+      <Card className="p-6">
+        {renderStep()}
+        <div className="flex justify-between mt-6">
           <Button
-            type="button"
             variant="bordered"
-            onClick={() => {
-              setData({});
-              setSelectedServerId("");
-              setSelectedProductId("");
-            }}
+            className={`${currentStep === 0 ? "cursor-not-allowed" : ""} ${currentStep === 0 && "hidden"}`}
+            onClick={handleBack}
             disabled={isSubmitting}
           >
-            Clear Form
+            Back
           </Button>
-          <Button
-            type="submit"
-            color="primary"
-            isLoading={isSubmitting}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creating Tenant..." : "Create Tenant"}
-          </Button>
+
+          {/* Only show Next button for steps 0, 1, and 2 */}
+          {currentStep < 3 && (
+            <Button
+              color="primary"
+              className={`${isFormEmpty ? "cursor-not-allowed opacity-50 hover:bg-black/55" : ""} ml-auto`}
+              onClick={handleNext}
+              isLoading={isSubmitting}
+              disabled={isSubmitting || isFormEmpty}
+            >
+              Next
+            </Button>
+          )}
         </div>
-      </form>
+      </Card>
     </div>
   );
 }
