@@ -10,7 +10,10 @@ if (!supabaseUrl || !supabaseKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey,{auth:{
+  autoRefreshToken:true,
+  persistSession:true,
+}});
 
 export async function createTenant(input: {
   id: string;

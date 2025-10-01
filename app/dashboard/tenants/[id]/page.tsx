@@ -37,7 +37,7 @@ interface Tenant {
   product_id: string;
   is_active: boolean;
   created_at: string;
-  domain: string | null;
+  sub_domain: string | null;
   settings_id: string | null;
   schema: string | null;
   status: string;
@@ -120,7 +120,7 @@ export default function TenantChartsPage() {
     const tenantMetrics: TenantMetrics = {
       daysActive,
       isRecent: createdAt > thirtyDaysAgo,
-      hasCustomDomain: !!tenantData.domain,
+      hasCustomDomain: !!tenantData.sub_domain,
       schemaReady: tenantData.schema_created,
       statusCategory: tenantData.status || (tenantData.is_active ? 'active' : 'inactive'),
     };
@@ -146,7 +146,7 @@ export default function TenantChartsPage() {
       // Simulate activity based on tenant characteristics
       let baseActivity = tenant.is_active ? 75 : 25;
       if (tenant.schema_created) baseActivity += 20;
-      if (tenant.domain) baseActivity += 15;
+      if (tenant.sub_domain) baseActivity += 15;
       
       // Add some realistic variation
       const variation = Math.random() * 30 - 15;
@@ -173,7 +173,7 @@ export default function TenantChartsPage() {
 
     const configItems = [
       { name: 'Basic Info', completed: true },
-      { name: 'Domain Setup', completed: !!tenant.domain },
+      { name: 'Domain Setup', completed: !!tenant.sub_domain },
       { name: 'Schema Created', completed: tenant.schema_created },
       { name: 'Business Reg', completed: !!tenant.business_reg_number },
     ];
@@ -310,7 +310,7 @@ export default function TenantChartsPage() {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">Domain</p>
-              <p className="font-medium">{tenant.domain || "Not configured"}</p>
+              <p className="font-medium">{tenant.sub_domain || "Not configured"}</p>
               <p className="text-sm text-gray-500 mt-2">Business Reg</p>
               <p className="font-medium">{tenant.business_reg_number || "Not provided"}</p>
             </div>

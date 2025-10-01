@@ -37,7 +37,7 @@ interface Tenant {
   product_id: string;
   is_active: boolean;
   created_at: string;
-  domain: string | null;
+  sub_domain: string | null;
   settings_id: string | null;
   schema: string | null;
   status: string;
@@ -108,7 +108,7 @@ export default function AllTenantsAnalytics() {
       totalTenants: tenants.length,
       activeTenants: tenants.filter((t) => t.status === "active").length,
       inactiveTenants: tenants.filter((t) => !t.is_active).length,
-      tenantsWithDomain: tenants.filter((t) => t.domain).length,
+      tenantsWithDomain: tenants.filter((t) => t.sub_domain).length,
       tenantsWithSchema: tenants.filter((t) => t.schema_created).length,
       tenantsByStatus: {},
       tenantsByTimeZone: {},
@@ -258,8 +258,8 @@ export default function AllTenantsAnalytics() {
     const matchesSearch =
       tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tenant.access_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (tenant.domain &&
-        tenant.domain.toLowerCase().includes(searchTerm.toLowerCase()));
+      (tenant.sub_domain &&
+        tenant.sub_domain.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus =
       statusFilter === "all" ||
@@ -605,14 +605,14 @@ export default function AllTenantsAnalytics() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {tenant.domain ? (
+                      {tenant.sub_domain ? (
                         <a
-                          href={`https://${tenant.domain}`}
+                          href={`https://${tenant.sub_domain}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-900 underline"
                         >
-                          {tenant.domain}
+                          {tenant.sub_domain}
                         </a>
                       ) : (
                         <span className="text-gray-400">Not set</span>

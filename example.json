@@ -1,0 +1,304 @@
+{
+  "success": true,
+  "data": [
+    {
+      "feature_name": "Mobile App",
+      "required": true,
+      "config": {
+        "form_data": [
+          {
+            "name": "Primary Organization Info",
+            "type": "group",
+            "childs": [
+              {
+                "name": "full_name",
+                "type": "text",
+                "default": null,
+                "required": true,
+                "max_length": 255,
+                "description": "Complete name of the organization",
+                "placeholder": "Full Organization Name"
+              },
+              {
+                "name": "short_name",
+                "type": "text",
+                "default": null,
+                "required": true,
+                "max_length": 100,
+                "description": "Short name or abbreviation",
+                "placeholder": "Org"
+              },
+              {
+                "name": "description",
+                "type": "textarea",
+                "default": null,
+                "required": true,
+                "description": "Organization description",
+                "placeholder": "Brief description of the organization"
+              },
+              {
+                "name": "email",
+                "type": "email",
+                "default": null,
+                "required": false,
+                "description": "Primary contact email",
+                "placeholder": "contact@organization.com"
+              },
+              {
+                "name": "website_url",
+                "type": "text",
+                "default": null,
+                "required": false,
+                "validation": "^https?://.*",
+                "description": "Organization website",
+                "placeholder": "https://www.organization.com"
+              }
+            ],
+            "default": null,
+            "required": true,
+            "description": "Basic information for the primary entity"
+          },
+          {
+            "name": "Custom Terminologies",
+            "type": "group",
+            "childs": [
+              {
+                "name": "employees_as",
+                "type": "text",
+                "default": "Staff",
+                "required": false,
+                "max_length": 100,
+                "description": "How to refer to employees",
+                "placeholder": "Staff, Employees, Team Members"
+              },
+              {
+                "name": "members_as",
+                "type": "text",
+                "default": "Shareholders",
+                "required": false,
+                "max_length": 100,
+                "description": "How to refer to members",
+                "placeholder": "Members, Shareholders, Participants"
+              },
+              {
+                "name": "entities_as",
+                "type": "text",
+                "default": "Departments",
+                "required": false,
+                "max_length": 100,
+                "description": "How to refer to sub-entities",
+                "placeholder": "Departments, Divisions, Units"
+              },
+              {
+                "name": "groups_as",
+                "type": "text",
+                "default": "Families",
+                "required": false,
+                "max_length": 100,
+                "description": "How to refer to family/groups",
+                "placeholder": "Families, Groups, Teams"
+              }
+            ],
+            "default": null,
+            "required": false,
+            "description": "Customize terms used throughout the application"
+          },
+          {
+            "name": "Feature Configuration",
+            "type": "group",
+            "childs": [
+              {
+                "name": "features_allowed",
+                "type": "multiselect",
+                "default": [
+                  "home",
+                  "members",
+                  "events",
+                  "committees",
+                  "profile",
+                  "notifications",
+                  "app_settings",
+                  "support",
+                  "groups"
+                ],
+                "options": [
+                  { "label": "Home Dashboard", "value": "home" },
+                  { "label": "Member Management", "value": "members" },
+                  { "label": "Event Management", "value": "events" },
+                  { "label": "Committee Management", "value": "committees" },
+                  { "label": "User Profiles", "value": "profile" },
+                  { "label": "Notifications", "value": "notifications" },
+                  { "label": "App Settings", "value": "app_settings" },
+                  { "label": "Support & Help", "value": "support" },
+                  { "label": "Family/Group Management", "value": "groups" }
+                ],
+                "required": false,
+                "description": "Features available to this tenant"
+              }
+            ],
+            "default": null,
+            "required": false,
+            "description": "Select which features to enable for this tenant"
+          },
+          {
+            "name": "Enrollment Configuration",
+            "type": "group",
+            "childs": [
+              {
+                "name": "requires_approval",
+                "type": "checkbox",
+                "default": true,
+                "required": false,
+                "description": "New enrollments require admin approval"
+              },
+              {
+                "name": "auto_approve_members",
+                "type": "checkbox",
+                "default": false,
+                "required": false,
+                "description": "Automatically approve member enrollments"
+              },
+              {
+                "name": "allow_public_enrollment",
+                "type": "checkbox",
+                "default": false,
+                "required": false,
+                "description": "Allow public registration without invitation"
+              },
+              {
+                "max": 10000,
+                "min": 1,
+                "name": "max_enrollments",
+                "type": "number",
+                "default": 100,
+                "required": false,
+                "description": "Maximum number of enrollments allowed"
+              },
+              {
+                "max": 30,
+                "min": 1,
+                "name": "review_time",
+                "type": "number",
+                "default": 7,
+                "required": false,
+                "description": "Days to review enrollment applications"
+              },
+              {
+                "name": "selected_approver",
+                "type": "select",
+                "default": "Committee Admin",
+                "options": [
+                  { "label": "Committee Admin", "value": "Committee Admin" },
+                  { "label": "System Admin", "value": "System Admin" },
+                  { "label": "Entity Admin", "value": "Entity Admin" }
+                ],
+                "required": false,
+                "description": "Who can approve enrollments"
+              }
+            ],
+            "default": null,
+            "required": false,
+            "description": "Configure how new members can join"
+          },
+          {
+            "name": "Default Admin User",
+            "type": "group",
+            "childs": [
+              {
+                "name": "first_name",
+                "type": "text",
+                "default": null,
+                "required": true,
+                "max_length": 100,
+                "description": "Administrator's first name",
+                "placeholder": "Admin"
+              },
+              {
+                "name": "last_name",
+                "type": "text",
+                "default": null,
+                "required": true,
+                "max_length": 100,
+                "description": "Administrator's last name",
+                "placeholder": "User"
+              },
+              {
+                "name": "email",
+                "type": "email",
+                "default": null,
+                "required": true,
+                "description": "Administrator's email address",
+                "placeholder": "admin@organization.com"
+              },
+              {
+                "name": "phone",
+                "type": "phone",
+                "default": null,
+                "required": true,
+                "description": "Administrator's phone number",
+                "placeholder": "+1234567890"
+              },
+              {
+                "name": "address",
+                "type": "textarea",
+                "default": null,
+                "required": true,
+                "description": "Administrator's address",
+                "placeholder": "Full address"
+              },
+              {
+                "name": "gender",
+                "type": "select",
+                "default": null,
+                "options": [
+                  { "label": "Male", "value": "male" },
+                  { "label": "Female", "value": "female" },
+                  { "label": "Other", "value": "other" },
+                  { "label": "Prefer not to say", "value": "prefer_not_to_say" }
+                ],
+                "required": true,
+                "description": "Administrator's gender"
+              },
+              {
+                "name": "Password",
+                "type": "text",
+                "default": null,
+                "required": true,
+                "description": "One Time Password for Admin"
+              }
+            ],
+            "default": null,
+            "required": true,
+            "description": "Create the initial administrator account"
+          }
+        ]
+      }
+    },
+    {
+      "feature_name": "Email",
+      "required": true,
+      "config": {
+        "form_data": [
+          {
+            "name": "Email Configuration",
+            "type": "group",
+            "childs": [
+              {
+                "name": "username",
+                "type": "text",
+                "childs": [],
+                "default": "System Gen",
+                "required": false,
+                "description": "Email username",
+                "placeholder": "Enter username"
+              }
+            ],
+            "default": null,
+            "required": true,
+            "description": "Configure email settings"
+          }
+        ]
+      }
+    }
+  ]
+}

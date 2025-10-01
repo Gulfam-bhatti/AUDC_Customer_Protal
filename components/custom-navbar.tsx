@@ -115,7 +115,7 @@ function CustomNavbar() {
               color="primary"
               onClick={() =>
                 (window.location.href =
-                  "BASE_URL/login")
+                  `${BASE_URL}/login`)
               }
             >
               Login

@@ -20,7 +20,7 @@ import {
 import { BASE_URL } from "@/config/constants";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { Download, Eye, Users, CheckCircle, XCircle } from "lucide-react";
+import { Download, Eye, Users, CheckCircle, XCircle, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -34,7 +34,7 @@ type Tenant = {
   product_id: string;
   is_active: boolean;
   created_at: string;
-  domain: string | null;
+  sub_domain: string | null;
   status: string;
   updated_at: string;
   logo: string | null;
@@ -107,7 +107,6 @@ export default function BillingHistoryPage() {
     console.log("user id:" + user?.id);
   };
 
-  
   // Calculate statistics
   const totalTenants = tenants.length;
   const activeTenants = tenants.filter((t) => t.status === "active").length;
@@ -136,11 +135,10 @@ export default function BillingHistoryPage() {
             </div>
             <CoolMode>
               <Button
-                onClick={() => router.push("/dashboard/tenants/add_new_tenant")}
+                onClick={() => router.push("/dashboard/tenants/create")}
                 className="bg-gradient-to-r cursor-pointer from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Export All
+                Create New
               </Button>
             </CoolMode>
           </div>
@@ -231,7 +229,7 @@ export default function BillingHistoryPage() {
                         {tenant.name}
                       </TableCell>
                       <TableCell>{tenant.access_code}</TableCell>
-                      <TableCell>{tenant.domain || "N/A"}</TableCell>
+                      <TableCell>{tenant.sub_domain || "N/A"}</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(tenant.status)}>
                           {tenant.status.charAt(0).toUpperCase() +

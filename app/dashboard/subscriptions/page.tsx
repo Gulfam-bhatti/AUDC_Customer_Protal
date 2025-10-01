@@ -54,8 +54,8 @@ type CurrencyRates = {
 
 // Define types based on Supabase schema
 type Product = {
-  product_id: string;
-  product_name: string;
+  id: string;
+  name: string;
   is_active: boolean;
   plan_name: string;
   max_users: number;
@@ -253,23 +253,7 @@ export default function SubscriptionPage() {
         }
         setFeatureMapping(mapping);
 
-        // Fetch current user plan
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          const { data: subscriptionData } = await supabase
-            .from("subscriptions")
-            .select("product_id")
-            .eq("user_id", user.id)
-            .single();
 
-          if (subscriptionData) {
-            setCurrentPlan(subscriptionData.product_id);
-            // Save current plan to local storage
-            localStorage.setItem("currentPlan", subscriptionData.product_id);
-          }
-        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -369,10 +353,10 @@ export default function SubscriptionPage() {
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
 
       // Update current plan state
-      setCurrentPlan(selectedPlan.product_id);
+      setCurrentPlan(selectedPlan.id);
 
       // Save current plan to local storage
-      localStorage.setItem("currentPlan", selectedPlan.product_id);
+      localStorage.setItem("currentPlan", selectedPlan.id);
 
       // Close dialog and reset form
       setIsUpgradeDialogOpen(false);
@@ -597,7 +581,7 @@ export default function SubscriptionPage() {
             const formattedPrice = formatPrice(price);
 
             // Determine button text and action based on current plan
-            const isCurrentPlan = currentPlan === product.product_id;
+            const isCurrentPlan = currentPlan === product.id;
             const buttonText = isCurrentPlan ? "Current" : "Upgrade Now";
             const buttonAction = isCurrentPlan
               ? undefined
@@ -605,7 +589,7 @@ export default function SubscriptionPage() {
 
             return (
               <div
-                key={product.product_id}
+                key={product.id}
                 className={`bg-white rounded-xl shadow-lg border-2 relative overflow-hidden ${
                   product.max_users > 1 ? "border-green-400" : "border-gray-200"
                 }`}
@@ -618,7 +602,7 @@ export default function SubscriptionPage() {
                 <div className="p-8">
                   {/* Plan Name & Details */}
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    {product.product_name}
+                    {product.name}
                   </h3>
                   <p className="text-gray-600 text-sm mb-6">
                     {product.plan_name}
@@ -728,7 +712,7 @@ export default function SubscriptionPage() {
       <Dialog open={isUpgradeDialogOpen} onOpenChange={setIsUpgradeDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Upgrade to {selectedPlan?.product_name}</DialogTitle>
+            <DialogTitle>Upgrade to {selectedPlan?.name}</DialogTitle>
             <DialogDescription>
               Complete your payment to upgrade your subscription plan.
             </DialogDescription>

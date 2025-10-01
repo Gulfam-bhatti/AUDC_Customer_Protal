@@ -10,7 +10,6 @@ export default function DashboardLayoutContent({
 }: {
   children: React.ReactNode;
 }) {
-  const [currentPage, setCurrentPage] = useState("tenant");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
