@@ -59,7 +59,11 @@ export type Product = {
   description: string;
   is_active: boolean;
   created_at: string;
-  features: string;
+  features: {
+    name?: string;
+    description?: string;
+    quota?: Record<string, any>;
+  }[];
   max_users: number;
   monthly_price: number;
   annual_price: number;
